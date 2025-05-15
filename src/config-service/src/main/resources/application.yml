@@ -1,0 +1,32 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-service
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${GIT_REPO_URI:https://github.com/yourcompany/config-repo.git}
+          username: ${GIT_USERNAME:}
+          password: ${GIT_PASSWORD:}
+          default-label: ${GIT_DEFAULT_BRANCH:main}
+          search-paths:
+            - /*
+          clone-on-start: true
+          force-pull: true
+          timeout: 10
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
