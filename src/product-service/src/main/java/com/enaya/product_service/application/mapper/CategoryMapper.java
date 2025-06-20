@@ -26,7 +26,7 @@ public class CategoryMapper {
                 .parentId(category.getParentId())
                 .fullPath(category.getFullPath())
                 .level(category.getLevel())
-                // .childCategoryIds(category.getChildCategoryIds())
+                .childCategoryIds(category.getChildCategoryIds())
                 // .metadata(category.getMetadata()) // This field was causing issues
                 .imageUrl(category.getImageUrl())
                 .displayOrder(category.getDisplayOrder())

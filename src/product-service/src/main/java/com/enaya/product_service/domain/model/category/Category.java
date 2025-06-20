@@ -69,6 +69,10 @@ public class Category {
     @Column(name = "slug")
     private String slug;
 
+    @Column(name = "child_category_ids")
+    @Convert(converter = UuidListConverter.class)
+    private List<UUID> childCategoryIds = new ArrayList<>();
+
     @Column(name = "full_path")
     private String fullPath;
 
@@ -77,7 +81,8 @@ public class Category {
 
     @Builder
     private Category(String name, String description, String slug,
-                     UUID parentId, int displayOrder, String fullPath, int level,
+                     UUID parentId, List<UUID> childCategoryIds,
+                     int displayOrder, String fullPath, int level,
                      boolean active, boolean visibleInMenu, String imageUrl) {
         this.name = validateName(name);
         this.description = description;
@@ -85,6 +90,8 @@ public class Category {
         this.path = this.slug;
         log.debug("Category constructor: Generated slug: '{}', Assigned path: '{}'", this.slug, this.path);
         this.parentId = parentId;
+        this.childCategoryIds = childCategoryIds != null ?
+                new ArrayList<>(childCategoryIds) : new ArrayList<>();
         this.displayOrder = Math.max(0, displayOrder);
         this.fullPath = fullPath;
         this.level = Math.max(0, level);
@@ -181,8 +188,20 @@ public class Category {
         return this.parentId == null;
     }
 
+    public boolean hasChildren() {
+        return !this.childCategoryIds.isEmpty();
+    }
+
     public boolean hasParent() {
         return this.parentId != null;
+    }
+
+    public boolean isLeafCategory() {
+        return this.childCategoryIds.isEmpty();
+    }
+
+    public boolean canBeDeleted() {
+        return this.childCategoryIds.isEmpty();
     }
 
     public boolean isDescendantOf(UUID ancestorId) {
@@ -265,5 +284,18 @@ public class Category {
         }
 
         return normalizedSlug;
+    }
+
+    public void addChildCategory(UUID childId) {
+        if (childId != null && !this.childCategoryIds.contains(childId)) {
+            this.childCategoryIds.add(childId);
+            updateModificationDate();
+        }
+    }
+
+    public void removeChildCategory(UUID childId) {
+        if (this.childCategoryIds.remove(childId)) {
+            updateModificationDate();
+        }
     }
 }
