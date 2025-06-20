@@ -37,53 +37,62 @@ public class CategoryApplicationService {
 
     @Transactional
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-        // Check if category with same name exists
-        if (categoryRepository.existsByName(request.getName())) {
-            throw new IllegalArgumentException("A category with this name already exists");
-        }
+        try {
+            // Check if category with same name exists
+            if (categoryRepository.existsByName(request.getName())) {
+                throw new IllegalArgumentException("A category with this name already exists");
+            }
 
-        Category category;
-        if (request.getParentId() != null) {
-            // Create child category
-            Category parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
+            Category category;
+            if (request.getParentId() != null) {
+                // Create child category
+                Category parent = categoryRepository.findById(request.getParentId())
+                        .orElseThrow(() -> new IllegalArgumentException("Parent category not found"));
+                
+                category = categoryDomainService.createChildCategory(
+                        request.getName(),
+                        request.getDescription(),
+                        parent.getId(),
+                        parent.getFullPath(),
+                        parent.getLevel()
+                );
+                
+                // Update parent's child list
+                categoryDomainService.addChildCategory(parent, category.getId());
+                categoryRepository.save(parent);
+            } else {
+                // Create root category
+                category = categoryDomainService.createRootCategory(
+                        request.getName(),
+                        request.getDescription()
+                );
+            }
+
+            // Set additional properties
+            if (request.getImageUrl() != null) {
+                categoryDomainService.setCategoryImage(category, request.getImageUrl());
+            }
+            if (request.getDisplayOrder() != null) {
+                categoryDomainService.updateCategoryDisplayOrder(category, request.getDisplayOrder());
+            }
+            if (request.getVisibleInMenu() != null && !request.getVisibleInMenu()) {
+                categoryDomainService.hideCategoryFromMenu(category);
+            }
+
+            Category savedCategory = categoryRepository.save(category);
             
-            category = categoryDomainService.createChildCategory(
-                    request.getName(),
-                    request.getDescription(),
-                    parent.getId(),
-                    parent.getFullPath(),
-                    parent.getLevel()
-            );
+            // Publish category created event
+            eventPublisher.publishEvent(CategoryCreated.from(savedCategory));
             
-            // Update parent's child list
-            categoryDomainService.addChildCategory(parent, category.getId());
-            categoryRepository.save(parent);
-        } else {
-            // Create root category
-            category = categoryDomainService.createRootCategory(
-                    request.getName(),
-                    request.getDescription()
-            );
+            return categoryMapper.toResponse(savedCategory);
+        } catch (Throwable t) {
+            // Log any possible error that could cause a rollback
+            System.err.println("############################################################");
+            System.err.println("############ CATASTROPHIC ERROR IN CREATE CATEGORY ###########");
+            t.printStackTrace();
+            System.err.println("############################################################");
+            throw t; // Re-throw to ensure transaction still fails as intended
         }
-
-        // Set additional properties
-        if (request.getImageUrl() != null) {
-            categoryDomainService.setCategoryImage(category, request.getImageUrl());
-        }
-        if (request.getDisplayOrder() != null) {
-            categoryDomainService.updateCategoryDisplayOrder(category, request.getDisplayOrder());
-        }
-        if (request.getVisibleInMenu() != null && !request.getVisibleInMenu()) {
-            categoryDomainService.hideCategoryFromMenu(category);
-        }
-
-        Category savedCategory = categoryRepository.save(category);
-        
-        // Publish category created event
-        eventPublisher.publishEvent(CategoryCreated.from(savedCategory));
-        
-        return categoryMapper.toResponse(savedCategory);
     }
 
     @Transactional(readOnly = true)

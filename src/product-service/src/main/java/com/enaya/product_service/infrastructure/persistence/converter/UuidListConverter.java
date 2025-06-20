@@ -25,10 +25,10 @@ public class UuidListConverter implements AttributeConverter<List<UUID>, String>
     @Override
     public List<UUID> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.trim().isEmpty()) {
-            return List.of();
+            return new java.util.ArrayList<>();
         }
         return Arrays.stream(dbData.split(SEPARATOR))
                 .map(UUID::fromString)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(java.util.ArrayList::new));
     }
 } 
