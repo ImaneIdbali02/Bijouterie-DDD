@@ -18,8 +18,8 @@ public class CategoryResponse {
     private UUID parentId;
     private String fullPath;
     private int level;
-    private List<UUID> childCategoryIds;
-    private CategoryMetadata metadata;
+    // private List<UUID> childCategoryIds;
+    // private CategoryMetadata metadata;
     private String imageUrl;
     private int displayOrder;
     private boolean active;

@@ -216,7 +216,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public List<Product> findByCollectionId(UUID collectionId) {
-        return jpaRepository.findByCollectionIdsContaining(collectionId);
+        return jpaRepository.findByCollectionId(collectionId);
     }
 
     @Override
@@ -625,7 +625,7 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Page<Product> findByCollectionId(UUID collectionId, Pageable pageable) {
-        return jpaRepository.findByCollectionIdsContaining(collectionId, pageable);
+        return jpaRepository.findByCollectionId(collectionId, pageable);
     }
 
     @Override

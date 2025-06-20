@@ -24,7 +24,6 @@ public class ProductVariantResponse {
     private List<Image> images;
     private boolean active;
     private ProductVariant.StockStatus stockStatus;
-    private Integer stockQuantity;
     private Double rating;
     private Integer reviewCount;
     private LocalDateTime creationDate;
@@ -55,9 +54,9 @@ public class ProductVariantResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Dimensions {
-        private double length;
-        private double width;
-        private double height;
-        private double weight;
+        private BigDecimal length;
+        private BigDecimal width;
+        private BigDecimal height;
+        private BigDecimal weight;
     }
 }

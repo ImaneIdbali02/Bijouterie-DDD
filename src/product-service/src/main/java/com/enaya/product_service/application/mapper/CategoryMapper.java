@@ -26,8 +26,8 @@ public class CategoryMapper {
                 .parentId(category.getParentId())
                 .fullPath(category.getFullPath())
                 .level(category.getLevel())
-                .childCategoryIds(category.getChildCategoryIds())
-                .metadata(category.getMetadata())
+                // .childCategoryIds(category.getChildCategoryIds())
+                // .metadata(category.getMetadata()) // This field was causing issues
                 .imageUrl(category.getImageUrl())
                 .displayOrder(category.getDisplayOrder())
                 .active(category.isActive())
@@ -60,7 +60,6 @@ public class CategoryMapper {
                 .name(request.getName())
                 .description(request.getDescription())
                 .parentId(request.getParentId())
-                .metadata(request.getMetadata())
                 .imageUrl(request.getImageUrl())
                 .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0)
                 .visibleInMenu(request.getVisibleInMenu() != null ? request.getVisibleInMenu() : true)
@@ -75,10 +74,7 @@ public class CategoryMapper {
         // Mise à jour des informations de base
         category.updateBasicInfo(request.getName(), request.getDescription());
 
-        // Mise à jour des métadonnées si présentes
-        if (request.getMetadata() != null) {
-            category.updateMetadata(request.getMetadata());
-        }
+
 
         // Mise à jour de l'ordre d'affichage si présent
         if (request.getDisplayOrder() != null) {

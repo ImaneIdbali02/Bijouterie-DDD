@@ -1,7 +1,7 @@
 package com.enaya.product_service.domain.model.product;
 
+import com.enaya.product_service.domain.model.collection.Collection;
 import com.enaya.product_service.domain.model.product.valueobjects.*;
-import com.enaya.product_service.infrastructure.persistence.converter.UuidListConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -40,9 +40,13 @@ public class Product {
     @Column(name = "category_id")
     private UUID categoryId;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "product_collections", joinColumns = @JoinColumn(name = "product_id"))
-    private List<UUID> collectionIds = new ArrayList<>();
+    @ManyToMany
+    @JoinTable(
+        name = "product_collections",
+        joinColumns = @JoinColumn(name = "product_id"),
+        inverseJoinColumns = @JoinColumn(name = "collection_id")
+    )
+    private List<Collection> collections = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductVariant> variants = new ArrayList<>();
@@ -71,7 +75,7 @@ public class Product {
 
     @Builder
     private Product(UUID id, String name, String description, String sku, Price price,
-                   UUID categoryId, List<UUID> collectionIds, List<ProductVariant> variants,
+                   UUID categoryId, List<Collection> collections, List<ProductVariant> variants,
                    List<ProductAttribute> attributes, List<ProductImage> images, boolean active) {
         this.id = id;
         this.name = name;
@@ -79,7 +83,7 @@ public class Product {
         this.sku = sku;
         this.price = price;
         this.categoryId = categoryId;
-        this.collectionIds = collectionIds != null ? new ArrayList<>(collectionIds) : new ArrayList<>();
+        this.collections = collections != null ? new ArrayList<>(collections) : new ArrayList<>();
         this.variants = variants != null ? new ArrayList<>(variants) : new ArrayList<>();
         this.attributes = attributes != null ? new ArrayList<>(attributes) : new ArrayList<>();
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
@@ -160,22 +164,26 @@ public class Product {
         this.version++;
     }
 
-    public void addToCollection(UUID collectionId) {
-        if (collectionId == null) {
-            throw new IllegalArgumentException("Collection ID cannot be null");
+    public void addToCollection(Collection collection) {
+        if (collection == null) {
+            throw new IllegalArgumentException("Collection cannot be null");
         }
-        if (!this.collectionIds.contains(collectionId)) {
-            this.collectionIds.add(collectionId);
+        if (!this.collections.contains(collection)) {
+            this.collections.add(collection);
             this.modificationDate = LocalDateTime.now();
             this.version++;
         }
     }
 
-    public void removeFromCollection(UUID collectionId) {
-        if (this.collectionIds.remove(collectionId)) {
+    public void removeFromCollection(Collection collection) {
+        if (this.collections.remove(collection)) {
             this.modificationDate = LocalDateTime.now();
             this.version++;
         }
+    }
+
+    public boolean isInCollection(Collection collection) {
+        return this.collections.contains(collection);
     }
 
     public void activate() {
@@ -201,10 +209,6 @@ public class Product {
 
     public boolean hasVariants() {
         return !this.variants.isEmpty();
-    }
-
-    public boolean isInCollection(UUID collectionId) {
-        return this.collectionIds.contains(collectionId);
     }
 
     public ProductImage getPrimaryImage() {

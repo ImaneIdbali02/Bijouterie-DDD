@@ -3,6 +3,7 @@ package com.enaya.product_service.application.event;
 import com.enaya.product_service.domain.event.product.*;
 import com.enaya.product_service.domain.model.product.Product;
 import com.enaya.product_service.domain.model.product.valueobjects.Price;
+import com.enaya.product_service.domain.model.collection.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +31,7 @@ public class ProductEventPublisher {
                 product.getCreationDate(),
                 product.getSku(),
                 product.isActive(),
-                product.getCollectionIds(),
+                product.getCollections().stream().map(Collection::getId).toList(),
                 product.getAttributes(),
                 product.getImages(),
                 product.getVersion()
@@ -49,7 +50,7 @@ public class ProductEventPublisher {
                 product.getModificationDate(),
                 product.getSku(),
                 product.isActive(),
-                product.getCollectionIds(),
+                product.getCollections().stream().map(Collection::getId).toList(),
                 product.getAttributes(),
                 product.getImages(),
                 product.getVersion()

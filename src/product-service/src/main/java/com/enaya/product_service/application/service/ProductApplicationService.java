@@ -11,6 +11,15 @@ import com.enaya.product_service.domain.model.product.ProductVariant;
 import com.enaya.product_service.domain.model.product.valueobjects.*;
 import com.enaya.product_service.domain.repository.ProductRepository;
 import com.enaya.product_service.domain.service.ProductDomainService;
+import com.enaya.product_service.domain.model.collection.Collection;
+import com.enaya.product_service.domain.repository.CollectionRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +45,8 @@ public class ProductApplicationService {
     private final ProductDomainService productDomainService;
     private final ProductMapper productMapper;
     private final ProductEventPublisher eventPublisher;
+    @Autowired
+    private CollectionRepository collectionRepository;
 
     @Transactional
     public void handleOutOfStock(UUID productId, UUID variantId) {
@@ -75,7 +86,7 @@ public class ProductApplicationService {
                 .sku(request.getSku())
                 .price(request.getPrice())
                 .categoryId(request.getCategoryId())
-                .collectionIds(request.getCollectionIds() != null ? new ArrayList<>(request.getCollectionIds()) : new ArrayList<>())
+                .collections(request.getCollectionIds() != null ? fetchCollectionsByIds(request.getCollectionIds()) : new ArrayList<>())
                 .attributes(request.getAttributes() != null ? new ArrayList<>(request.getAttributes()) : new ArrayList<>())
                 .images(request.getImages() != null ? new ArrayList<>(request.getImages()) : new ArrayList<>())
                 .active(request.isActive())
@@ -84,18 +95,27 @@ public class ProductApplicationService {
         // Créer les variantes si spécifiées
         if (request.getVariants() != null) {
             request.getVariants().forEach(variantRequest -> {
+                JewelryDimensions dimensions = null;
+                if (variantRequest.getDimensions() != null) {
+                    dimensions = JewelryDimensions.of(
+                        variantRequest.getDimensions().getLength().doubleValue(),
+                        variantRequest.getDimensions().getWidth().doubleValue(),
+                        variantRequest.getDimensions().getHeight().doubleValue(),
+                        0.0 // Default weight, can be updated later
+                    );
+                }
+
                 ProductVariant variant = ProductVariant.builder()
                         .product(product)
                         .name(variantRequest.getName())
                         .sku(variantRequest.getSku())
                         .price(variantRequest.getPrice())
-                        .dimensions(variantRequest.getDimensions())
+                        .dimensions(dimensions)
                         .specificAttributes(variantRequest.getSpecificAttributes() != null ? 
                             new ArrayList<>(variantRequest.getSpecificAttributes()) : new ArrayList<>())
                         .images(variantRequest.getImages() != null ? 
                             new ArrayList<>(variantRequest.getImages()) : new ArrayList<>())
                         .active(variantRequest.isActive())
-                        .stockQuantity(variantRequest.getStockQuantity())
                         .rating(variantRequest.getRating())
                         .reviewCount(variantRequest.getReviewCount())
                         .build();
@@ -208,5 +228,9 @@ public class ProductApplicationService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Product> products = productRepository.findByCollectionId(collectionId, pageable);
         return products.map(productMapper::toResponse);
+    }
+
+    private List<Collection> fetchCollectionsByIds(List<UUID> ids) {
+        return collectionRepository.findAllById(ids);
     }
 }

@@ -68,9 +68,6 @@ public class CategoryApplicationService {
         }
 
         // Set additional properties
-        if (request.getMetadata() != null) {
-            categoryDomainService.updateCategoryMetadata(category, request.getMetadata());
-        }
         if (request.getImageUrl() != null) {
             categoryDomainService.setCategoryImage(category, request.getImageUrl());
         }
@@ -147,9 +144,7 @@ public class CategoryApplicationService {
         categoryDomainService.updateCategoryBasicInfo(category, request.getName(), request.getDescription());
 
         // Update metadata if provided
-        if (request.getMetadata() != null) {
-            categoryDomainService.updateCategoryMetadata(category, request.getMetadata());
-        }
+
 
         // Update image if provided
         if (request.getImageUrl() != null) {

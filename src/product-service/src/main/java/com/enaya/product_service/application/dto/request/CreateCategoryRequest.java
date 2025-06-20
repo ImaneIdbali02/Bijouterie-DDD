@@ -17,7 +17,7 @@ public class CreateCategoryRequest {
     private String description;
 
     private UUID parentId;
-    private CategoryMetadata metadata;
+    // private CategoryMetadata metadata;
     private String imageUrl;
     private Integer displayOrder;
     private Boolean visibleInMenu;

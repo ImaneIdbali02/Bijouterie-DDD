@@ -5,6 +5,8 @@ import com.enaya.product_service.domain.model.product.ProductVariant;
 import com.enaya.product_service.domain.model.product.valueobjects.*;
 import com.enaya.product_service.domain.repository.ProductRepository;
 import com.enaya.product_service.domain.repository.ProductVariantRepository;
+import com.enaya.product_service.domain.repository.CollectionRepository;
+import com.enaya.product_service.domain.model.collection.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,7 @@ public class ProductDomainService {
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
     private final ProductValidationService validationService;
+    private final CollectionRepository collectionRepository;
     private static final String DEFAULT_CURRENCY = "MAD";
 
     /**
@@ -45,7 +48,7 @@ public class ProductDomainService {
                 .sku(newSku)
                 .price(sourceProduct.getPrice())
                 .categoryId(sourceProduct.getCategoryId())
-                .collectionIds(new ArrayList<>(sourceProduct.getCollectionIds()))
+                .collections(new ArrayList<>(sourceProduct.getCollections()))
                 .attributes(new ArrayList<>(sourceProduct.getAttributes()))
                 .images(new ArrayList<>(sourceProduct.getImages()))
                 .active(false) // Le clone est inactif par défaut
@@ -62,7 +65,6 @@ public class ProductDomainService {
                     .images(new ArrayList<>(sourceVariant.getImages()))
                     .active(false)
                     .stockStatus(ProductVariant.StockStatus.OUT_OF_STOCK)
-                    .stockQuantity(0)
                     .build();
             clonedProduct.addVariant(clonedVariant);
         });
@@ -217,21 +219,15 @@ public class ProductDomainService {
     /**
      * Calcule le poids total d'un produit (incluant ses variantes)
      */
-    public double calculateTotalWeight(Product product) {
+    public BigDecimal calculateTotalWeight(Product product) {
         if (product == null) {
-            return 0.0;
+            return BigDecimal.ZERO;
         }
 
-        double totalWeight = 0.0;
-
-        // Poids des variantes ayant des dimensions
-        for (ProductVariant variant : product.getVariants()) {
-            if (variant.getDimensions() != null) {
-                totalWeight += variant.getDimensions().getWeight();
-            }
-        }
-
-        return totalWeight;
+        return product.getVariants().stream()
+                .filter(v -> v.getDimensions() != null && v.getDimensions().getWeight() != null)
+                .map(v -> v.getDimensions().getWeight())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     /**
@@ -326,10 +322,7 @@ public class ProductDomainService {
     /**
      * Met à jour la quantité en stock d'une variante
      */
-    public ProductVariant updateVariantStockQuantity(ProductVariant variant, Integer quantity) {
-        variant.updateStockQuantity(quantity);
-        return variantRepository.save(variant);
-    }
+
 
     /**
      * Met à jour la note d'une variante
@@ -375,7 +368,7 @@ public class ProductDomainService {
      * Ajoute un produit à une collection
      */
     public Product addProductToCollection(Product product, UUID collectionId) {
-        product.addToCollection(collectionId);
+        product.addToCollection(fetchCollectionById(collectionId));
         return productRepository.save(product);
     }
 
@@ -383,7 +376,7 @@ public class ProductDomainService {
      * Retire un produit d'une collection
      */
     public Product removeProductFromCollection(Product product, UUID collectionId) {
-        product.removeFromCollection(collectionId);
+        product.removeFromCollection(fetchCollectionById(collectionId));
         return productRepository.save(product);
     }
 
@@ -595,30 +588,44 @@ public class ProductDomainService {
     }
 
     private void validateRingDimensions(JewelryDimensions dimensions) {
-        if (dimensions.getLength() < 10 || dimensions.getLength() > 30) {
+        if (dimensions.getLength().compareTo(BigDecimal.valueOf(10)) < 0 || dimensions.getLength().compareTo(BigDecimal.valueOf(30)) > 0) {
             throw new IllegalArgumentException("Ring diameter must be between 10mm and 30mm");
         }
-        if (dimensions.getWidth() < 1 || dimensions.getWidth() > 15) {
+        if (dimensions.getWidth().compareTo(BigDecimal.valueOf(1)) < 0 || dimensions.getWidth().compareTo(BigDecimal.valueOf(15)) > 0) {
             throw new IllegalArgumentException("Ring width must be between 1mm and 15mm");
         }
     }
 
     private void validateNecklaceDimensions(JewelryDimensions dimensions) {
-        if (dimensions.getLength() < 300 || dimensions.getLength() > 1000) {
+        if (dimensions.getLength().compareTo(BigDecimal.valueOf(300)) < 0 || dimensions.getLength().compareTo(BigDecimal.valueOf(1000)) > 0) {
             throw new IllegalArgumentException("Necklace length must be between 300mm and 1000mm");
         }
     }
 
     private void validateBraceletDimensions(JewelryDimensions dimensions) {
-        if (dimensions.getLength() < 150 || dimensions.getLength() > 250) {
+        if (dimensions.getLength().compareTo(BigDecimal.valueOf(150)) < 0 || dimensions.getLength().compareTo(BigDecimal.valueOf(250)) > 0) {
             throw new IllegalArgumentException("Bracelet length must be between 150mm and 250mm");
         }
     }
 
     private void validateEarringDimensions(JewelryDimensions dimensions) {
-        if (dimensions.getLength() > 100) {
+        if (dimensions.getLength().compareTo(BigDecimal.valueOf(100)) > 0) {
             throw new IllegalArgumentException("Earring length cannot exceed 100mm");
         }
+    }
+
+    private Collection fetchCollectionById(UUID id) {
+        return collectionRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Collection not found: " + id));
+    }
+
+    private BigDecimal calculateTotalVolume(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        return variants.stream()
+                       .map(v -> v.getDimensions() != null ? v.getDimensions().getVolume() : BigDecimal.ZERO)
+                       .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     // Classe interne pour représenter une fourchette de prix

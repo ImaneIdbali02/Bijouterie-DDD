@@ -8,12 +8,21 @@ import com.enaya.product_service.application.dto.response.ProductResponse;
 import com.enaya.product_service.application.dto.response.ProductVariantResponse;
 import com.enaya.product_service.domain.model.product.Product;
 import com.enaya.product_service.domain.model.product.ProductVariant;
+import com.enaya.product_service.domain.model.collection.Collection;
+import com.enaya.product_service.domain.repository.CollectionRepository;
+import com.enaya.product_service.domain.model.product.valueobjects.JewelryDimensions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.UUID;
 
 @Component
 public class ProductMapper {
+
+    @Autowired
+    private CollectionRepository collectionRepository;
 
     public ProductResponse toResponse(Product product) {
         if (product == null) {
@@ -28,7 +37,7 @@ public class ProductMapper {
                 .price(product.getPrice().getAmount())
                 .currency(product.getPrice().getCurrency().getCurrencyCode())
                 .categoryId(product.getCategoryId())
-                .collectionIds(product.getCollectionIds())
+                .collectionIds(product.getCollections() != null ? product.getCollections().stream().map(Collection::getId).toList() : null)
                 .attributes(product.getAttributes().stream()
                         .map(attr -> new ProductResponse.Attribute(attr.getName(), attr.getValue()))
                         .collect(Collectors.toList()))
@@ -70,7 +79,6 @@ public class ProductMapper {
                         .collect(Collectors.toList()))
                 .active(variant.isActive())
                 .stockStatus(variant.getStockStatus())
-                .stockQuantity(variant.getStockQuantity())
                 .rating(variant.getRating())
                 .reviewCount(variant.getReviewCount())
                 .creationDate(variant.getCreationDate())
@@ -90,7 +98,7 @@ public class ProductMapper {
                 .sku(request.getSku())
                 .price(request.getPrice())
                 .categoryId(request.getCategoryId())
-                .collectionIds(request.getCollectionIds())
+                .collections(request.getCollectionIds() != null ? fetchCollectionsByIds(request.getCollectionIds()) : new ArrayList<>())
                 .attributes(request.getAttributes())
                 .images(request.getImages())
                 .active(true) // Par défaut, un nouveau produit est actif
@@ -102,15 +110,24 @@ public class ProductMapper {
             return null;
         }
 
+        JewelryDimensions dimensions = null;
+        if (request.getDimensions() != null) {
+            dimensions = JewelryDimensions.of(
+                request.getDimensions().getLength().doubleValue(),
+                request.getDimensions().getWidth().doubleValue(),
+                request.getDimensions().getHeight().doubleValue(),
+                0.0 // Default weight, can be updated later
+            );
+        }
+
         return ProductVariant.builder()
                 .name(request.getName())
                 .sku(request.getSku())
                 .price(request.getPrice())
-                .dimensions(request.getDimensions())
+                .dimensions(dimensions)
                 .specificAttributes(request.getSpecificAttributes())
                 .images(request.getImages())
                 .active(true) // Par défaut, une nouvelle variante est active
-                .stockQuantity(request.getStockQuantity())
                 .rating(request.getRating())
                 .reviewCount(request.getReviewCount())
                 .build();
@@ -141,8 +158,8 @@ public class ProductMapper {
 
         // Mise à jour des collections
         if (request.getCollectionIds() != null) {
-            product.getCollectionIds().clear();
-            product.getCollectionIds().addAll(request.getCollectionIds());
+            product.getCollections().clear();
+            product.getCollections().addAll(fetchCollectionsByIds(request.getCollectionIds()));
         }
 
         // Mise à jour des attributs
@@ -187,11 +204,6 @@ public class ProductMapper {
             variant.updateStockStatus(request.getStockStatus());
         }
 
-        // Mise à jour de la quantité en stock
-        if (request.getStockQuantity() != null) {
-            variant.updateStockQuantity(request.getStockQuantity());
-        }
-
         // Mise à jour de la note
         if (request.getRating() != null) {
             variant.updateRating(request.getRating());
@@ -224,6 +236,11 @@ public class ProductMapper {
                 variant.deactivate();
             }
         }
+
+        // Mise à jour des dimensions
+        if (request.getDimensions() != null) {
+            variant.updateDimensions(JewelryDimensions.of(request.getDimensions().getLength().doubleValue(), request.getDimensions().getWidth().doubleValue(), request.getDimensions().getHeight().doubleValue(), variant.getDimensions().getWeight().doubleValue()));
+        }
     }
 
     public List<ProductResponse> toResponseList(List<Product> products) {
@@ -242,5 +259,9 @@ public class ProductMapper {
         return variants.stream()
                 .map(this::toVariantResponse)
                 .collect(Collectors.toList());
+    }
+
+    private List<Collection> fetchCollectionsByIds(List<UUID> ids) {
+        return collectionRepository.findAllById(ids);
     }
 }

@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Data
 public class CreateProductVariantRequest {
@@ -25,7 +26,7 @@ public class CreateProductVariantRequest {
     @NotNull(message = "Le prix de la variante est obligatoire")
     private Price price;
 
-    private JewelryDimensions dimensions;
+    private Dimensions dimensions;
 
     private List<ProductAttribute> specificAttributes;
 
@@ -33,9 +34,14 @@ public class CreateProductVariantRequest {
 
     private boolean active = true;
 
-    private Integer stockQuantity;
-
     private Double rating;
 
     private Integer reviewCount = 0;
+
+    @Data
+    public static class Dimensions {
+        private BigDecimal length;
+        private BigDecimal width;
+        private BigDecimal height;
+    }
 } 

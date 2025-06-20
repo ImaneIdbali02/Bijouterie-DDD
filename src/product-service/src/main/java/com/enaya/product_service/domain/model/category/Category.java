@@ -1,6 +1,7 @@
 package com.enaya.product_service.domain.model.category;
 
 import com.enaya.product_service.domain.model.category.valueobjects.CategoryMetadata;
+import com.enaya.product_service.infrastructure.persistence.converter.CategoryMetadataConverter;
 import com.enaya.product_service.infrastructure.persistence.converter.UuidListConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -67,37 +69,25 @@ public class Category {
     @Column(name = "slug")
     private String slug;
 
-    @Column(name = "child_category_ids")
-    @Convert(converter = UuidListConverter.class)
-    private List<UUID> childCategoryIds = new ArrayList<>();
-
     @Column(name = "full_path")
     private String fullPath;
 
     @Column(name = "visible_in_menu")
     private boolean visibleInMenu = true;
 
-    @Column(name = "metadata")
-    private CategoryMetadata metadata;
-
     @Builder
     private Category(String name, String description, String slug,
-                     UUID parentId, List<UUID> childCategoryIds,
-                     int displayOrder, String fullPath, int level,
-                     CategoryMetadata metadata, boolean active,
-                     boolean visibleInMenu, String imageUrl) {
+                     UUID parentId, int displayOrder, String fullPath, int level,
+                     boolean active, boolean visibleInMenu, String imageUrl) {
         this.name = validateName(name);
         this.description = description;
         this.slug = generateSlugIfNeeded(slug, name);
         this.path = this.slug;
         log.debug("Category constructor: Generated slug: '{}', Assigned path: '{}'", this.slug, this.path);
         this.parentId = parentId;
-        this.childCategoryIds = childCategoryIds != null ?
-                new ArrayList<>(childCategoryIds) : new ArrayList<>();
         this.displayOrder = Math.max(0, displayOrder);
         this.fullPath = fullPath;
         this.level = Math.max(0, level);
-        this.metadata = metadata;
         this.active = active;
         this.visibleInMenu = visibleInMenu;
         this.imageUrl = imageUrl;
@@ -139,11 +129,6 @@ public class Category {
         updateModificationDate();
     }
 
-    public void updateMetadata(CategoryMetadata metadata) {
-        this.metadata = metadata;
-        updateModificationDate();
-    }
-
     public void updateDisplayOrder(int newOrder) {
         this.displayOrder = Math.max(0, newOrder);
         updateModificationDate();
@@ -179,19 +164,6 @@ public class Category {
         updateModificationDate();
     }
 
-    public void addChildCategory(UUID childId) {
-        if (childId != null && !this.childCategoryIds.contains(childId)) {
-            this.childCategoryIds.add(childId);
-            updateModificationDate();
-        }
-    }
-
-    public void removeChildCategory(UUID childId) {
-        if (this.childCategoryIds.remove(childId)) {
-            updateModificationDate();
-        }
-    }
-
     public void updateHierarchyInfo(String newFullPath, int newLevel) {
         this.fullPath = newFullPath;
         this.level = Math.max(0, newLevel);
@@ -209,20 +181,8 @@ public class Category {
         return this.parentId == null;
     }
 
-    public boolean hasChildren() {
-        return !this.childCategoryIds.isEmpty();
-    }
-
     public boolean hasParent() {
         return this.parentId != null;
-    }
-
-    public boolean isLeafCategory() {
-        return this.childCategoryIds.isEmpty();
-    }
-
-    public boolean canBeDeleted() {
-        return this.childCategoryIds.isEmpty();
     }
 
     public boolean isDescendantOf(UUID ancestorId) {
@@ -251,7 +211,7 @@ public class Category {
     }
 
     public boolean hasMetadata() {
-        return this.metadata != null;
+        return false;
     }
 
     private void updateModificationDate() {

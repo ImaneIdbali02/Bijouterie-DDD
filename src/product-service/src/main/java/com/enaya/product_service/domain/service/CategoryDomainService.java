@@ -46,12 +46,7 @@ public class CategoryDomainService {
     /**
      * Met à jour les métadonnées d'une catégorie
      */
-    public void updateCategoryMetadata(Category category, CategoryMetadata metadata) {
-        if (category == null) {
-            throw new IllegalArgumentException("Category cannot be null");
-        }
-        category.updateMetadata(metadata);
-    }
+
 
     /**
      * Met à jour l'ordre d'affichage d'une catégorie

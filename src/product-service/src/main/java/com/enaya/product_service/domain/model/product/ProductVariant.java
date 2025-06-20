@@ -53,9 +53,6 @@ public class ProductVariant {
     @Column(name = "stock_status", nullable = false)
     private StockStatus stockStatus = StockStatus.IN_STOCK;
 
-    @Column(name = "stock_quantity")
-    private Integer stockQuantity;
-
     @Column(name = "rating")
     private Double rating;
 
@@ -81,7 +78,7 @@ public class ProductVariant {
     private ProductVariant(UUID id, Product product, String name, String sku, Price price,
                           JewelryDimensions dimensions, List<ProductAttribute> specificAttributes,
                           List<ProductImage> images, boolean active, StockStatus stockStatus,
-                          Integer stockQuantity, Double rating, Integer reviewCount) {
+                          Double rating, Integer reviewCount) {
         this.id = id;
         this.product = product;
         this.name = name;
@@ -92,7 +89,6 @@ public class ProductVariant {
         this.images = images != null ? new ArrayList<>(images) : new ArrayList<>();
         this.active = active;
         this.stockStatus = stockStatus != null ? stockStatus : StockStatus.IN_STOCK;
-        this.stockQuantity = stockQuantity;
         this.rating = rating;
         this.reviewCount = reviewCount != null ? reviewCount : 0;
         this.creationDate = LocalDateTime.now();
@@ -128,19 +124,6 @@ public class ProductVariant {
 
     public void updateStockStatus(StockStatus status) {
         this.stockStatus = status;
-        this.modificationDate = LocalDateTime.now();
-        this.version++;
-    }
-
-    public void updateStockQuantity(Integer quantity) {
-        this.stockQuantity = quantity;
-        if (quantity != null && quantity <= 0) {
-            this.stockStatus = StockStatus.OUT_OF_STOCK;
-        } else if (quantity != null && quantity < 10) {
-            this.stockStatus = StockStatus.LOW_STOCK;
-        } else if (quantity != null && quantity >= 10) {
-            this.stockStatus = StockStatus.IN_STOCK;
-        }
         this.modificationDate = LocalDateTime.now();
         this.version++;
     }
@@ -185,6 +168,12 @@ public class ProductVariant {
         this.version++;
     }
 
+    public void updateDimensions(JewelryDimensions dimensions) {
+        this.dimensions = dimensions;
+        this.modificationDate = LocalDateTime.now();
+        this.version++;
+    }
+
     public void activate() {
         this.active = true;
         this.modificationDate = LocalDateTime.now();
@@ -198,13 +187,11 @@ public class ProductVariant {
     }
 
     public boolean isInStock() {
-        return this.stockStatus == StockStatus.IN_STOCK || 
-               (this.stockStatus == StockStatus.LOW_STOCK && this.stockQuantity != null && this.stockQuantity > 0);
+        return this.stockStatus == StockStatus.IN_STOCK;
     }
 
     public boolean isOutOfStock() {
-        return this.stockStatus == StockStatus.OUT_OF_STOCK || 
-               (this.stockQuantity != null && this.stockQuantity <= 0);
+        return this.stockStatus == StockStatus.OUT_OF_STOCK;
     }
 
     public ProductImage getPrimaryImage() {

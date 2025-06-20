@@ -3,6 +3,7 @@ package com.enaya.product_service.domain.service;
 import com.enaya.product_service.domain.model.product.Product;
 import com.enaya.product_service.domain.model.product.ProductVariant;
 import com.enaya.product_service.domain.model.product.valueobjects.*;
+import com.enaya.product_service.domain.model.collection.Collection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -71,7 +72,7 @@ public class ProductValidationService {
         }
 
         // Validation des collections
-        if (product.getCollectionIds() == null || product.getCollectionIds().isEmpty()) {
+        if (product.getCollections() == null || product.getCollections().isEmpty()) {
             errors.add("Le produit doit appartenir à au moins une collection");
         }
     }
@@ -106,7 +107,7 @@ public class ProductValidationService {
 
             // Validation des dimensions
             if (variant.getDimensions() != null) {
-                validateDimensions(variant.getDimensions(), errors);
+                validateDimensions(variant.getDimensions(), errors, "variante");
             }
 
             // Validation des attributs spécifiques
@@ -185,7 +186,7 @@ public class ProductValidationService {
     }
 
     private void validatePrice(Price price, List<String> errors, String context) {
-        if (price.getAmount() == null || price.getAmount().compareTo(BigDecimal.valueOf(0)) <= 0) {
+        if (price.getAmount() == null || price.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             errors.add("Le prix du " + context + " doit être supérieur à zéro");
         }
 
@@ -194,27 +195,20 @@ public class ProductValidationService {
         }
     }
 
-    private void validateDimensions(JewelryDimensions dimensions, List<String> errors) {
-        if (dimensions.getLength() <= 0) {
-            errors.add("La longueur doit être supérieure à zéro");
-        }
-
-        if (dimensions.getWidth() <= 0) {
-            errors.add("La largeur doit être supérieure à zéro");
-        }
-
-        if (dimensions.getHeight() < 0) {
-            errors.add("La hauteur ne peut pas être négative");
-        }
-
-        if (dimensions.getWeight() <= 0) {
-            errors.add("Le poids doit être supérieur à zéro");
-        }
-
-        // Vérification du type de bijou
-        if (!dimensions.isRing() && !dimensions.isNecklace() && 
-            !dimensions.isBracelet() && !dimensions.isEarring()) {
-            errors.add("Les dimensions ne correspondent à aucun type de bijou standard");
+    private void validateDimensions(JewelryDimensions dimensions, List<String> errors, String context) {
+        if (dimensions != null) {
+            if (dimensions.getLength() == null || dimensions.getLength().compareTo(BigDecimal.ZERO) <= 0) {
+                errors.add("La longueur des dimensions du " + context + " doit être supérieure à zéro");
+            }
+            if (dimensions.getWidth() == null || dimensions.getWidth().compareTo(BigDecimal.ZERO) <= 0) {
+                errors.add("La largeur des dimensions du " + context + " doit être supérieure à zéro");
+            }
+            if (dimensions.getHeight() != null && dimensions.getHeight().compareTo(BigDecimal.ZERO) < 0) {
+                errors.add("La hauteur des dimensions du " + context + " ne peut pas être négative");
+            }
+            if (dimensions.getWeight() == null || dimensions.getWeight().compareTo(BigDecimal.ZERO) <= 0) {
+                errors.add("Le poids des dimensions du " + context + " doit être supérieur à zéro");
+            }
         }
     }
 
@@ -225,8 +219,8 @@ public class ProductValidationService {
         }
 
         // Validation des collections
-        if (product.getCollectionIds() != null) {
-            product.getCollectionIds().forEach(collectionId -> {
+        if (product.getCollections() != null) {
+            product.getCollections().stream().map(Collection::getId).toList().forEach(collectionId -> {
                 if (collectionId == null) {
                     errors.add("L'ID de la collection est obligatoire");
                 }

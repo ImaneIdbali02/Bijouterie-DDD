@@ -102,7 +102,6 @@ CREATE TABLE product_variants (
     dimensions_unit VARCHAR(10) DEFAULT 'mm',
     active BOOLEAN NOT NULL DEFAULT true,
     stock_status VARCHAR(20) NOT NULL DEFAULT 'IN_STOCK',
-    stock_quantity INTEGER,
     rating DECIMAL(3,2),
     review_count INTEGER DEFAULT 0,
     creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -32,6 +32,11 @@ public class CollectionRepositoryImpl implements CollectionRepository {
     }
 
     @Override
+    public List<Collection> findAllById(Iterable<UUID> ids) {
+        return jpaRepository.findAllById(ids);
+    }
+
+    @Override
     public List<Collection> findActiveCollections() {
         return jpaRepository.findActiveCollections();
     }

@@ -33,11 +33,13 @@ public interface ProductJpaRepository extends JpaRepository<Product, UUID> {
     @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
     Page<Product> findByCategoryId(UUID categoryId, Pageable pageable);
 
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.collections c WHERE c.id = :collectionId")
     @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
-    List<Product> findByCollectionIdsContaining(UUID collectionId);
+    List<Product> findByCollectionId(@Param("collectionId") UUID collectionId);
     
+    @Query("SELECT DISTINCT p FROM Product p JOIN p.collections c WHERE c.id = :collectionId")
     @QueryHints(@QueryHint(name = "org.hibernate.cacheable", value = "true"))
-    Page<Product> findByCollectionIdsContaining(UUID collectionId, Pageable pageable);
+    Page<Product> findByCollectionId(@Param("collectionId") UUID collectionId, Pageable pageable);
 
     // Méthodes avec verrouillage optimiste
     @Lock(LockModeType.OPTIMISTIC)

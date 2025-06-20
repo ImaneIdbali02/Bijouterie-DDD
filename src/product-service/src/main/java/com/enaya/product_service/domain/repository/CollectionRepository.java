@@ -9,6 +9,7 @@ public interface CollectionRepository {
     Collection save(Collection collection);
     Optional<Collection> findById(UUID id);
     List<Collection> findAll();
+    List<Collection> findAllById(Iterable<UUID> ids);
     List<Collection> findActiveCollections();
     void delete(UUID id);
     boolean existsById(UUID id);

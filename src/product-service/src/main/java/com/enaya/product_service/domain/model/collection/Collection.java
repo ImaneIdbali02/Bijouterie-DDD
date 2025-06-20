@@ -2,6 +2,7 @@ package com.enaya.product_service.domain.model.collection;
 
 import com.enaya.product_service.domain.model.collection.valueobjects.ImageCollection;
 import com.enaya.product_service.domain.model.collection.valueobjects.PeriodCollection;
+import com.enaya.product_service.domain.model.product.Product;
 import com.enaya.product_service.infrastructure.persistence.converter.UuidListConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -74,6 +75,9 @@ public class Collection {
     
     @Version
     private Long version;
+
+    @ManyToMany(mappedBy = "collections")
+    private List<Product> products = new ArrayList<>();
 
     @Builder
     private Collection(UUID id, String name, String description, String slug,

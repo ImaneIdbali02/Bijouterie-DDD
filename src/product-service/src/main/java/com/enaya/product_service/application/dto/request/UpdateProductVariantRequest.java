@@ -10,6 +10,7 @@ import lombok.Data;
 import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 @Data
 public class UpdateProductVariantRequest {
@@ -21,7 +22,7 @@ public class UpdateProductVariantRequest {
 
     private Price price;
 
-    private JewelryDimensions dimensions;
+    private UpdateProductVariantRequest.Dimensions dimensions;
 
     private List<ProductAttribute> specificAttributes;
 
@@ -31,9 +32,14 @@ public class UpdateProductVariantRequest {
 
     private ProductVariant.StockStatus stockStatus;
 
-    private Integer stockQuantity;
-
     private Double rating;
 
     private Integer reviewCount;
+
+    @Data
+    public static class Dimensions {
+        private BigDecimal length;
+        private BigDecimal width;
+        private BigDecimal height;
+    }
 } 
