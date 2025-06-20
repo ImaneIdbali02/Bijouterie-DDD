@@ -1,0 +1,210 @@
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "refresh_interval": "1s",
+    "max_result_window": 50000,
+    "analysis": {
+      "analyzer": {
+        "english": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "english_stop",
+            "english_stemmer",
+            "asciifolding"
+          ]
+        },
+        "autocomplete": {
+          "type": "custom",
+          "tokenizer": "autocomplete_tokenizer",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        },
+        "search_autocomplete": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        }
+      },
+      "tokenizer": {
+        "autocomplete_tokenizer": {
+          "type": "edge_ngram",
+          "min_gram": 2,
+          "max_gram": 10,
+          "token_chars": [
+            "letter",
+            "digit"
+          ]
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "name": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "autocomplete": {
+            "type": "text",
+            "analyzer": "autocomplete",
+            "search_analyzer": "search_autocomplete"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "english"
+      },
+      "sku": {
+        "type": "keyword"
+      },
+      "price": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "scaled_float",
+            "scaling_factor": 100
+          },
+          "currency": {
+            "type": "keyword"
+          }
+        }
+      },
+      "creationDate": {
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS"
+      },
+      "modificationDate": {
+        "type": "date",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS"
+      },
+      "categoryId": {
+        "type": "keyword"
+      },
+      "collectionIds": {
+        "type": "keyword"
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "version": {
+        "type": "long"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "keyword"
+          },
+          "value": {
+            "type": "text",
+            "analyzer": "english",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+      },
+      "images": {
+        "type": "nested",
+        "properties": {
+          "url": {
+            "type": "keyword",
+            "index": false
+          },
+          "displayOrder": {
+            "type": "integer"
+          },
+          "altText": {
+            "type": "text",
+            "analyzer": "english"
+          },
+          "main": {
+            "type": "boolean"
+          }
+        }
+      },
+      "variants": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "text",
+            "analyzer": "english"
+          },
+          "sku": {
+            "type": "keyword"
+          },
+          "price": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "scaled_float",
+                "scaling_factor": 100
+              },
+              "currency": {
+                "type": "keyword"
+              }
+            }
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "stockQuantity": {
+            "type": "integer"
+          },
+          "stockStatus": {
+            "type": "keyword"
+          },
+          "rating": {
+            "type": "half_float"
+          },
+          "reviewCount": {
+            "type": "integer"
+          },
+          "creationDate": {
+            "type": "date",
+            "format": "yyyy-MM-dd'T'HH:mm:ss.SSS"
+          },
+          "modificationDate": {
+            "type": "date",
+            "format": "yyyy-MM-dd'T'HH:mm:ss.SSS"
+          },
+          "version": {
+            "type": "long"
+          }
+        }
+      }
+    }
+  }
+}

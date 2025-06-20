@@ -1,103 +1,151 @@
 package com.enaya.product_service.domain.model.category;
 
-
-import com.enaya.product_service.domain.model.category.valueobjects.MetadonneesCategorie;
+import com.enaya.product_service.domain.model.category.valueobjects.CategoryMetadata;
+import com.enaya.product_service.infrastructure.persistence.converter.UuidListConverter;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
+@Entity
+@Table(name = "categories")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Categorie {
+public class Category {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private String nom;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(length = 1000)
     private String description;
-    private String slug;
-    private UUID categorieParenteId;
-    private List<UUID> categoriesEnfantIds;
-    private int ordreAffichage;
-    private String cheminComplet; // e.g., "Electronics > Computers > Laptops"
-    private int niveau; // 0 for root categories, 1 for first level children, etc.
-    private MetadonneesCategorie metadonnees;
-    private boolean active;
-    private boolean visibleMenu;
+
+    @Column(name = "parent_id")
+    private UUID parentId;
+
+    @Column(nullable = false)
+    private int level;
+
+    @Column(name = "path", nullable = false)
+    private String path;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+
+    @Column(name = "image_url")
     private String imageUrl;
-    private LocalDateTime dateCreation;
-    private LocalDateTime dateModification;
-    private int version;
+
+    @CreationTimestamp
+    @Column(name = "creation_date", nullable = false, updatable = false)
+    private LocalDateTime creationDate;
+
+    @UpdateTimestamp
+    @Column(name = "modification_date", nullable = false)
+    private LocalDateTime modificationDate;
+
+    @Version
+    private Long version;
+
+    @Column(name = "slug")
+    private String slug;
+
+    @Column(name = "child_category_ids")
+    @Convert(converter = UuidListConverter.class)
+    private List<UUID> childCategoryIds = new ArrayList<>();
+
+    @Column(name = "full_path")
+    private String fullPath;
+
+    @Column(name = "visible_in_menu")
+    private boolean visibleInMenu = true;
+
+    @Column(name = "metadata")
+    private CategoryMetadata metadata;
 
     @Builder
-    private Categorie(UUID id, String nom, String description, String slug,
-                      UUID categorieParenteId, List<UUID> categoriesEnfantIds,
-                      int ordreAffichage, String cheminComplet, int niveau,
-                      MetadonneesCategorie metadonnees, boolean active,
-                      boolean visibleMenu, String imageUrl) {
-        this.id = id != null ? id : UUID.randomUUID();
-        this.nom = validateNom(nom);
+    private Category(String name, String description, String slug,
+                     UUID parentId, List<UUID> childCategoryIds,
+                     int displayOrder, String fullPath, int level,
+                     CategoryMetadata metadata, boolean active,
+                     boolean visibleInMenu, String imageUrl) {
+        this.name = validateName(name);
         this.description = description;
-        this.slug = generateSlugIfNeeded(slug, nom);
-        this.categorieParenteId = categorieParenteId;
-        this.categoriesEnfantIds = categoriesEnfantIds != null ?
-                new ArrayList<>(categoriesEnfantIds) : new ArrayList<>();
-        this.ordreAffichage = Math.max(0, ordreAffichage);
-        this.cheminComplet = cheminComplet;
-        this.niveau = Math.max(0, niveau);
-        this.metadonnees = metadonnees;
+        this.slug = generateSlugIfNeeded(slug, name);
+        this.path = this.slug;
+        log.debug("Category constructor: Generated slug: '{}', Assigned path: '{}'", this.slug, this.path);
+        this.parentId = parentId;
+        this.childCategoryIds = childCategoryIds != null ?
+                new ArrayList<>(childCategoryIds) : new ArrayList<>();
+        this.displayOrder = Math.max(0, displayOrder);
+        this.fullPath = fullPath;
+        this.level = Math.max(0, level);
+        this.metadata = metadata;
         this.active = active;
-        this.visibleMenu = visibleMenu;
+        this.visibleInMenu = visibleInMenu;
         this.imageUrl = imageUrl;
-        this.dateCreation = LocalDateTime.now();
-        this.dateModification = LocalDateTime.now();
-        this.version = 0;
+        this.creationDate = LocalDateTime.now();
+        this.modificationDate = LocalDateTime.now();
+        this.version = 0L;
     }
 
-    public static Categorie createRoot(String nom, String description) {
-        return Categorie.builder()
-                .nom(nom)
+    public static Category createRoot(String name, String description) {
+        return Category.builder()
+                .name(name)
                 .description(description)
-                .niveau(0)
-                .cheminComplet(nom)
+                .level(0)
+                .fullPath(name)
                 .active(true)
-                .visibleMenu(true)
-                .ordreAffichage(0)
+                .visibleInMenu(true)
+                .displayOrder(0)
                 .build();
     }
 
-    public static Categorie createChild(String nom, String description, UUID parentId,
-                                        String parentPath, int parentLevel) {
-        return Categorie.builder()
-                .nom(nom)
+    public static Category createChild(String name, String description, UUID parentId,
+                                       String parentPath, int parentLevel) {
+        return Category.builder()
+                .name(name)
                 .description(description)
-                .categorieParenteId(parentId)
-                .niveau(parentLevel + 1)
-                .cheminComplet(parentPath + " > " + nom)
+                .parentId(parentId)
+                .level(parentLevel + 1)
+                .fullPath(parentPath + " > " + name)
                 .active(true)
-                .visibleMenu(true)
-                .ordreAffichage(0)
+                .visibleInMenu(true)
+                .displayOrder(0)
                 .build();
     }
 
-    public void updateBasicInfo(String nom, String description) {
-        this.nom = validateNom(nom);
+    public void updateBasicInfo(String name, String description) {
+        this.name = validateName(name);
         this.description = description;
-        this.slug = generateSlugIfNeeded(null, nom);
+        this.slug = generateSlugIfNeeded(null, name);
         updateModificationDate();
     }
 
-    public void updateMetadonnees(MetadonneesCategorie metadonnees) {
-        this.metadonnees = metadonnees;
+    public void updateMetadata(CategoryMetadata metadata) {
+        this.metadata = metadata;
         updateModificationDate();
     }
 
     public void updateDisplayOrder(int newOrder) {
-        this.ordreAffichage = Math.max(0, newOrder);
+        this.displayOrder = Math.max(0, newOrder);
         updateModificationDate();
     }
 
@@ -122,112 +170,112 @@ public class Categorie {
     }
 
     public void showInMenu() {
-        this.visibleMenu = true;
+        this.visibleInMenu = true;
         updateModificationDate();
     }
 
     public void hideFromMenu() {
-        this.visibleMenu = false;
+        this.visibleInMenu = false;
         updateModificationDate();
     }
 
     public void addChildCategory(UUID childId) {
-        if (childId != null && !this.categoriesEnfantIds.contains(childId)) {
-            this.categoriesEnfantIds.add(childId);
+        if (childId != null && !this.childCategoryIds.contains(childId)) {
+            this.childCategoryIds.add(childId);
             updateModificationDate();
         }
     }
 
     public void removeChildCategory(UUID childId) {
-        if (this.categoriesEnfantIds.remove(childId)) {
+        if (this.childCategoryIds.remove(childId)) {
             updateModificationDate();
         }
     }
 
-    public void updateHierarchyInfo(String nouveauCheminComplet, int nouveauNiveau) {
-        this.cheminComplet = nouveauCheminComplet;
-        this.niveau = Math.max(0, nouveauNiveau);
+    public void updateHierarchyInfo(String newFullPath, int newLevel) {
+        this.fullPath = newFullPath;
+        this.level = Math.max(0, newLevel);
         updateModificationDate();
     }
 
-    public void moveToParent(UUID nouveauParentId, String nouveauCheminComplet, int nouveauNiveau) {
-        this.categorieParenteId = nouveauParentId;
-        this.cheminComplet = nouveauCheminComplet;
-        this.niveau = Math.max(0, nouveauNiveau);
+    public void moveToParent(UUID newParentId, String newFullPath, int newLevel) {
+        this.parentId = newParentId;
+        this.fullPath = newFullPath;
+        this.level = Math.max(0, newLevel);
         updateModificationDate();
     }
 
     public boolean isRootCategory() {
-        return this.categorieParenteId == null;
+        return this.parentId == null;
     }
 
     public boolean hasChildren() {
-        return !this.categoriesEnfantIds.isEmpty();
+        return !this.childCategoryIds.isEmpty();
     }
 
     public boolean hasParent() {
-        return this.categorieParenteId != null;
+        return this.parentId != null;
     }
 
     public boolean isLeafCategory() {
-        return this.categoriesEnfantIds.isEmpty();
+        return this.childCategoryIds.isEmpty();
     }
 
     public boolean canBeDeleted() {
-        return this.categoriesEnfantIds.isEmpty();
+        return this.childCategoryIds.isEmpty();
     }
 
     public boolean isDescendantOf(UUID ancestorId) {
-        if (ancestorId == null || this.cheminComplet == null) {
+        if (ancestorId == null || this.fullPath == null) {
             return false;
         }
-        // This is a simplified check - in practice you'd traverse the hierarchy
-        return this.categorieParenteId != null && this.categorieParenteId.equals(ancestorId);
+        // Simplified check — in real usage you'd traverse the hierarchy
+        return this.parentId != null && this.parentId.equals(ancestorId);
     }
 
     public int getMaxDepthFromHere() {
-        // This would typically be calculated by traversing child categories
-        // For now, return a simple calculation based on current level
-        return Math.max(0, 10 - this.niveau); // Assuming max depth of 10
+        // Typically this would be calculated by traversing child categories
+        // For now, we just return a simple approximation
+        return Math.max(0, 10 - this.level); // Assuming max depth is 10
     }
 
     public List<String> getPathSegments() {
-        if (this.cheminComplet == null) {
+        if (this.fullPath == null) {
             return new ArrayList<>();
         }
-        return List.of(this.cheminComplet.split(" > "));
+        return List.of(this.fullPath.split(" > "));
     }
 
     public boolean hasImage() {
         return this.imageUrl != null && !this.imageUrl.trim().isEmpty();
     }
 
-    public boolean hasMetadonnees() {
-        return this.metadonnees != null;
+    public boolean hasMetadata() {
+        return this.metadata != null;
     }
 
     private void updateModificationDate() {
-        this.dateModification = LocalDateTime.now();
+        this.modificationDate = LocalDateTime.now();
         this.version++;
     }
 
-    private String validateNom(String nom) {
-        if (nom == null || nom.trim().isEmpty()) {
+    private String validateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Category name cannot be null or empty");
         }
-        if (nom.length() > 255) {
+        if (name.length() > 255) {
             throw new IllegalArgumentException("Category name cannot exceed 255 characters");
         }
-        return nom.trim();
+        return name.trim();
     }
 
-    private String generateSlugIfNeeded(String providedSlug, String nom) {
+    private String generateSlugIfNeeded(String providedSlug, String name) {
         if (providedSlug != null && !providedSlug.trim().isEmpty()) {
             return validateAndNormalizeSlug(providedSlug);
         }
 
         // Generate slug from name
-        return nom.toLowerCase()
+        return name.toLowerCase()
                 .replaceAll("[^a-z0-9\\s-]", "") // Remove special characters
                 .replaceAll("\\s+", "-") // Replace spaces with hyphens
                 .replaceAll("-+", "-") // Replace multiple hyphens with single

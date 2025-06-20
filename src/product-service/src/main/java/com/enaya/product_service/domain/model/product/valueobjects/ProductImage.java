@@ -1,61 +1,98 @@
 package com.enaya.product_service.domain.model.product.valueobjects;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import lombok.Value;
 import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
 
-@Getter
-@EqualsAndHashCode
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Value
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
 public class ProductImage {
+    @Column(name = "url", nullable = false, length = 500)
+    String url;
+    
+    @Column(name = "alt_text", length = 255)
+    String altText;
+    
+    @Column(name = "display_order")
+    int displayOrder;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "image_type", length = 20)
+    ImageType type;
+    
+    Dimensions dimensions;
 
-    private String url;
-    private String altText;
-    private int displayOrder;
-    private String type; // PRIMARY, SECONDARY, THUMBNAIL, ZOOM
-    private long sizeBytes;
-    private int width;
-    private int height;
-
-    private ProductImage(String url, String altText, int displayOrder, String type,
-                         long sizeBytes, int width, int height) {
+    private ProductImage(String url, String altText, int displayOrder, ImageType type, Dimensions dimensions) {
         this.url = validateUrl(url);
         this.altText = validateAltText(altText);
         this.displayOrder = validateDisplayOrder(displayOrder);
-        this.type = validateType(type);
-        this.sizeBytes = validateSizeBytes(sizeBytes);
-        this.width = validateDimension(width, "width");
-        this.height = validateDimension(height, "height");
+        this.type = type;
+        this.dimensions = dimensions;
     }
 
     public static ProductImage of(String url, String altText, int displayOrder) {
-        return new ProductImage(url, altText, displayOrder, "SECONDARY", 0, 0, 0);
+        return new ProductImage(url, altText, displayOrder, ImageType.SECONDARY, null);
     }
 
+    public static ProductImage of(String url, String altText, int displayOrder, ImageType type, Dimensions dimensions) {
+        return new ProductImage(url, altText, displayOrder, type, dimensions);
+    }
+
+    // Factory methods for common image types
     public static ProductImage primary(String url, String altText) {
-        return new ProductImage(url, altText, 0, "PRIMARY", 0, 0, 0);
+        return new ProductImage(url, altText, 0, ImageType.PRIMARY, null);
     }
 
-    public static ProductImage thumbnail(String url, String altText, int width, int height) {
-        return new ProductImage(url, altText, Integer.MAX_VALUE, "THUMBNAIL", 0, width, height);
+    public static ProductImage thumbnail(String url, String altText, Dimensions dimensions) {
+        return new ProductImage(url, altText, Integer.MAX_VALUE, ImageType.THUMBNAIL, dimensions);
     }
 
-    public static ProductImage withFullDetails(String url, String altText, int displayOrder,
-                                               String type, long sizeBytes, int width, int height) {
-        return new ProductImage(url, altText, displayOrder, type, sizeBytes, width, height);
+    public static ProductImage zoom(String url, String altText, Dimensions dimensions) {
+        return new ProductImage(url, altText, 0, ImageType.ZOOM, dimensions);
+    }
+
+    private String validateUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            throw new IllegalArgumentException("Image URL cannot be null or empty");
+        }
+        if (!url.matches("^https?://.+")) {
+            throw new IllegalArgumentException("Image URL must be a valid HTTP(S) URL");
+        }
+        return url.trim();
+    }
+
+    private String validateAltText(String altText) {
+        if (altText == null || altText.trim().isEmpty()) {
+            throw new IllegalArgumentException("Alt text cannot be null or empty");
+        }
+        if (altText.length() > 255) {
+            throw new IllegalArgumentException("Alt text cannot exceed 255 characters");
+        }
+        return altText.trim();
+    }
+
+    private int validateDisplayOrder(int displayOrder) {
+        if (displayOrder < 0) {
+            throw new IllegalArgumentException("Display order cannot be negative");
+        }
+        return displayOrder;
     }
 
     public boolean isPrimary() {
-        return "PRIMARY".equals(this.type);
+        return type == ImageType.PRIMARY;
     }
 
     public boolean isThumbnail() {
-        return "THUMBNAIL".equals(this.type);
+        return type == ImageType.THUMBNAIL;
     }
 
     public boolean isZoomable() {
-        return "ZOOM".equals(this.type);
+        return type == ImageType.ZOOM;
     }
 
     public String getFileExtension() {
@@ -70,87 +107,58 @@ public class ProductImage {
         return extension.matches("^(jpg|jpeg|png|gif|webp|svg)$");
     }
 
-    public double getAspectRatio() {
-        if (width <= 0 || height <= 0) {
-            return 0.0;
-        }
-        return (double) width / height;
-    }
-
-    public boolean isSquare() {
-        return width == height && width > 0;
-    }
-
-    public boolean isLandscape() {
-        return width > height && height > 0;
-    }
-
-    public boolean isPortrait() {
-        return height > width && width > 0;
-    }
-
     @Override
     public String toString() {
-        return String.format("ProductImage{url='%s', altText='%s', displayOrder=%d, type='%s', sizeBytes=%d, width=%d, height=%d}",
-                url, altText, displayOrder, type, sizeBytes, width, height);
+        return String.format("Image[url=%s, alt=%s, order=%d, type=%s]", url, altText, displayOrder, type);
     }
 
-    // Validation Methods
-
-    private String validateUrl(String url) {
-        if (url == null || url.isBlank()) {
-            throw new IllegalArgumentException("URL cannot be null or empty");
-        }
-        // Basic URL format check (optional, improve as needed)
-        if (!url.matches("^(https?://|ftp://).+")) {
-            throw new IllegalArgumentException("URL must start with http://, https://, or ftp://");
-        }
-        return url;
+    public enum ImageType {
+        PRIMARY,
+        SECONDARY,
+        THUMBNAIL,
+        ZOOM
     }
 
-    private String validateAltText(String altText) {
-        if (altText == null || altText.isBlank()) {
-            throw new IllegalArgumentException("Alt text cannot be null or empty");
-        }
-        if (altText.length() > 255) {
-            throw new IllegalArgumentException("Alt text length must not exceed 255 characters");
-        }
-        return altText;
-    }
+    @Value
+    @Embeddable
+    @NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
+    public static class Dimensions {
+        @Column(name = "width")
+        int width;
+        
+        @Column(name = "height")
+        int height;
 
-    private int validateDisplayOrder(int displayOrder) {
-        if (displayOrder < 0) {
-            throw new IllegalArgumentException("Display order must be zero or positive");
+        private Dimensions(int width, int height) {
+            this.width = validateDimension(width, "width");
+            this.height = validateDimension(height, "height");
         }
-        return displayOrder;
-    }
 
-    private String validateType(String type) {
-        if (type == null) {
-            throw new IllegalArgumentException("Type cannot be null");
+        public static Dimensions of(int width, int height) {
+            return new Dimensions(width, height);
         }
-        switch (type.toUpperCase()) {
-            case "PRIMARY":
-            case "SECONDARY":
-            case "THUMBNAIL":
-            case "ZOOM":
-                return type.toUpperCase();
-            default:
-                throw new IllegalArgumentException("Invalid image type: " + type);
-        }
-    }
 
-    private long validateSizeBytes(long sizeBytes) {
-        if (sizeBytes < 0) {
-            throw new IllegalArgumentException("Size in bytes cannot be negative");
+        private int validateDimension(int dimension, String dimensionName) {
+            if (dimension <= 0) {
+                throw new IllegalArgumentException(dimensionName + " must be positive");
+            }
+            return dimension;
         }
-        return sizeBytes;
-    }
 
-    private int validateDimension(int dimension, String dimensionName) {
-        if (dimension < 0) {
-            throw new IllegalArgumentException(dimensionName + " cannot be negative");
+        public double getAspectRatio() {
+            return (double) width / height;
         }
-        return dimension;
+
+        public boolean isSquare() {
+            return width == height;
+        }
+
+        public boolean isLandscape() {
+            return width > height;
+        }
+
+        public boolean isPortrait() {
+            return height > width;
+        }
     }
 }

@@ -1,21 +1,56 @@
-package com.enaya.product_service.domain.event;
+package com.enaya.product_service.domain.event.product;
 
-import com.enaya.product_service.domain.model.product.Product;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.enaya.product_service.domain.model.product.valueobjects.ProductAttribute;
+import com.enaya.product_service.domain.model.product.valueobjects.ProductImage;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-@Data
-@AllArgsConstructor
-public class ProductCreated {
-    private final UUID eventId = UUID.randomUUID();
-    private final LocalDateTime occurredOn = LocalDateTime.now();
-    private final UUID productId;
-    private final String productName;
-
-    public static ProductCreated from(Product product) {
-        return new ProductCreated(product.getId(), product.getName());
+public record ProductCreated(
+        UUID productId,
+        String name,
+        String description,
+        BigDecimal price,
+        String currency,
+        UUID categoryId,
+        LocalDateTime createdAt,
+        String sku,
+        boolean active,
+        List<UUID> collectionIds,
+        List<ProductAttribute> attributes,
+        List<ProductImage> images,
+        Long version
+) {
+    public static ProductCreated of(
+            UUID productId,
+            String name,
+            String description,
+            BigDecimal price,
+            String currency,
+            UUID categoryId,
+            LocalDateTime createdAt,
+            String sku,
+            boolean active,
+            List<UUID> collectionIds,
+            List<ProductAttribute> attributes,
+            List<ProductImage> images,
+            Long version) {
+        return new ProductCreated(
+                productId,
+                name,
+                description,
+                price,
+                currency,
+                categoryId,
+                createdAt,
+                sku,
+                active,
+                collectionIds,
+                attributes,
+                images,
+                version
+        );
     }
 }

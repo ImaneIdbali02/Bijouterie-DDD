@@ -15,25 +15,25 @@ spec:
     spec:
       containers:
         - name: config-service
-          image: bijoutrie-ecommerce.com/config-service:v1.0.0
+          image: idbali02/config-service:v1.0.0
           ports:
             - containerPort: 8888
           env:
-            - name: GIT_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: git-credentials
-                  key: GIT_USERNAME
-            - name: GIT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: git-credentials
-                  key: GIT_PASSWORD
-            - name: GIT_REPO_URI
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_URI
               valueFrom:
                 configMapKeyRef:
                   name: config-service-env
                   key: GIT_REPO_URI
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: git-credentials
+                  key: GIT_USERNAME
+            - name: SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: git-credentials
+                  key: GIT_PASSWORD
             - name: SPRING_PROFILES_ACTIVE
               valueFrom:
                 configMapKeyRef:
@@ -43,18 +43,18 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8888
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8888
-            initialDelaySeconds: 15
+            initialDelaySeconds: 60
             periodSeconds: 5
           resources:
-            requests:
-              memory: "256Mi"
-              cpu: "100m"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "500m"
+            requests:
+              memory: "512Mi"
+              cpu: "250m"

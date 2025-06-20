@@ -1,4 +1,4 @@
-package com.enaya.product_service.domain.event;
+package com.enaya.product_service.domain.event.collection;
 
 import com.enaya.product_service.domain.model.collection.Collection;
 import lombok.AllArgsConstructor;

@@ -1,4 +1,4 @@
-package com.enaya.product_service.domain.event;
+package com.enaya.product_service.domain.event.category;
 
 import com.enaya.product_service.domain.model.category.Category;
 import lombok.AllArgsConstructor;

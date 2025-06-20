@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: config-service-env
-  namespace: ecommerce
+  namespace: enaya
 data:
-  GIT_REPO_URI: "https://github.com/votrecompany/config-repo.git"
+  GIT_REPO_URI: "https://github.com/ImaneIdbali02/config-repo.git"
   SPRING_PROFILES_ACTIVE: "dev"

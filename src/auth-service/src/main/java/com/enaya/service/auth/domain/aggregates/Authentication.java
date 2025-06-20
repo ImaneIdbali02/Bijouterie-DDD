@@ -8,91 +8,48 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
+/**
+ * Authentication aggregate root
+ * Represents user authentication data in the system
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Authentification {
+public class Authentication {
     private UUID id;
     private UUID clientId;
     private String username;
     private String email;
-    private String hashMotDePasse;
-    private boolean verified;
-    private String provider; // "LOCAL", "GOOGLE", "FACEBOOK"
+    private String passwordHash;
+    private AuthProvider provider;
     private String providerUserId;
+    private boolean enabled;
+    private boolean locked;
+    private String passwordResetToken;
+    private LocalDateTime passwordResetTokenExpiry;
     private LocalDateTime createdAt;
-    private LocalDateTime lastLogin;
-    private boolean active;
-    private boolean isAdmin;
+    private LocalDateTime updatedAt;
+    private Long version;
+    private String role;
 
-
-    public static Authentification createLocalUser(UUID clientId, String username,
-                                                 String email, String hashedPassword) {
-        return Authentification.builder()
-                .id(UUID.randomUUID())
-                .clientId(clientId)
-                .username(username)
-                .email(email)
-                .hashMotDePasse(hashedPassword)
-                .verified(false)
-                .provider("LOCAL")
-                .createdAt(LocalDateTime.now())
-                .active(true)
-                .isAdmin(false)
-                .build();
-    }
-    /**
-     * Factory method to create a new social authentication
-     */
-    public static com.jewelryshop.auth.domain.aggregates.Authentification createSocialUser(UUID clientId, String email,
-                                                                                           String provider, String providerUserId) {
-        return com.jewelryshop.auth.domain.aggregates.Authentification.builder()
-                .id(UUID.randomUUID())
-                .clientId(clientId)
-                .email(email)
-                .provider(provider)
-                .providerUserId(providerUserId)
-                .verified(true) // Social logins are considered pre-verified
-                .createdAt(LocalDateTime.now())
-                .active(true)
-                .isAdmin(false)
-                .build();
+    public enum AuthProvider {
+        LOCAL,
+        GOOGLE,
+        FACEBOOK,
     }
 
-    /**
-     * Updates the last login timestamp
-     */
-    public void recordLogin() {
-        this.lastLogin = LocalDateTime.now();
+    public void lock() {
+        if (!this.locked) {
+            this.locked = true;
+            this.updatedAt = LocalDateTime.now();
+        }
     }
 
-    /**
-     * Verifies the user's account
-     */
-    public void verify() {
-        this.verified = true;
-    }
-
-    /**
-     * Deactivates the user's account
-     */
-    public void deactivate() {
-        this.active = false;
-    }
-
-    /**
-     * Reactivates the user's account
-     */
-    public void activate() {
-        this.active = true;
-    }
-
-    /**
-     * Updates the password hash
-     */
-    public void updatePassword(String newHashedPassword) {
-        this.hashMotDePasse = newHashedPassword;
+    public void unlock() {
+        if (this.locked) {
+            this.locked = false;
+            this.updatedAt = LocalDateTime.now();
+        }
     }
 }

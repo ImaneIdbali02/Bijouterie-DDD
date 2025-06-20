@@ -1,22 +1,29 @@
-package com.enaya.product_service.domain.event;
+package com.enaya.product_service.domain.event.product;
 
-import com.enaya.product_service.domain.model.product.valueobjects.Price;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
-@AllArgsConstructor
-public class ProductPriceChanged {
-    private final UUID eventId = UUID.randomUUID();
-    private final LocalDateTime occurredOn = LocalDateTime.now();
-    private final UUID productId;
-    private final Price oldPrice;
-    private final Price newPrice;
-
-    public static ProductPriceChanged from(UUID productId, Price oldPrice, Price newPrice) {
-        return new ProductPriceChanged(productId, oldPrice, newPrice);
+public record ProductPriceChanged(
+        UUID productId,
+        BigDecimal oldPrice,
+        BigDecimal newPrice,
+        String currency,
+        LocalDateTime changedAt
+) {
+    public static ProductPriceChanged of(
+            UUID productId,
+            BigDecimal oldPrice,
+            BigDecimal newPrice,
+            String currency,
+            LocalDateTime changedAt) {
+        return new ProductPriceChanged(
+                productId,
+                oldPrice,
+                newPrice,
+                currency,
+                changedAt
+        );
     }
 }

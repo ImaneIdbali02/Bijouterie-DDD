@@ -22,13 +22,13 @@ public class ProductEventPublisher {
         log.info("Publishing ProductCreated event for product: {}", product.getId());
         eventPublisher.publishEvent(ProductCreated.of(
                 product.getId(),
-                product.getName().getValue(),
+                product.getName(),
                 product.getDescription(),
                 product.getPrice().getAmount(),
-                product.getPrice().getCurrency(),
+                String.valueOf(product.getPrice().getCurrency()),
                 product.getCategoryId(),
                 product.getCreationDate(),
-                product.getSku().getValue(),
+                product.getSku(),
                 product.isActive(),
                 product.getCollectionIds(),
                 product.getAttributes(),
@@ -41,13 +41,13 @@ public class ProductEventPublisher {
         log.info("Publishing ProductUpdated event for product: {}", product.getId());
         eventPublisher.publishEvent(ProductUpdated.of(
                 product.getId(),
-                product.getName().getValue(),
+                product.getName(),
                 product.getDescription(),
                 product.getPrice().getAmount(),
-                product.getPrice().getCurrency(),
+                String.valueOf(product.getPrice().getCurrency()),
                 product.getCategoryId(),
                 product.getModificationDate(),
-                product.getSku().getValue(),
+                product.getSku(),
                 product.isActive(),
                 product.getCollectionIds(),
                 product.getAttributes(),
@@ -70,7 +70,7 @@ public class ProductEventPublisher {
                 productId,
                 oldPrice.getAmount(),
                 newPrice.getAmount(),
-                oldPrice.getCurrency(),
+                String.valueOf(oldPrice.getCurrency()),
                 LocalDateTime.now()
         ));
     }

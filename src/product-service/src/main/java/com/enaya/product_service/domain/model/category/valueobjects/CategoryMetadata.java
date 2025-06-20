@@ -1,38 +1,62 @@
 package com.enaya.product_service.domain.model.category.valueobjects;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Column;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
-@EqualsAndHashCode
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MetadonneesCategorie {
+@Value
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
+public class CategoryMetadata {
 
-    private String titreSeo;
-    private String descriptionSeo;
-    private List<String> motsCles;
-    private String metaRobots; // index, noindex, follow, nofollow
-    private String canonicalUrl;
-    private String schemaMarkup;
-    private String openGraphTitle;
-    private String openGraphDescription;
-    private String openGraphImage;
-    private String twitterTitle;
-    private String twitterDescription;
-    private String twitterImage;
+    @Column(name = "seo_title")
+    String seoTitle;
+    
+    @Column(name = "seo_description")
+    String seoDescription;
+    
+    @Column(name = "keywords")
+    List<String> keywords;
+    
+    @Column(name = "meta_robots")
+    String metaRobots; // index, noindex, follow, nofollow
+    
+    @Column(name = "canonical_url")
+    String canonicalUrl;
+    
+    @Column(name = "schema_markup")
+    String schemaMarkup;
+    
+    @Column(name = "open_graph_title")
+    String openGraphTitle;
+    
+    @Column(name = "open_graph_description")
+    String openGraphDescription;
+    
+    @Column(name = "open_graph_image")
+    String openGraphImage;
+    
+    @Column(name = "twitter_title")
+    String twitterTitle;
+    
+    @Column(name = "twitter_description")
+    String twitterDescription;
+    
+    @Column(name = "twitter_image")
+    String twitterImage;
 
-    private MetadonneesCategorie(String titreSeo, String descriptionSeo, List<String> motsCles,
-                                 String metaRobots, String canonicalUrl, String schemaMarkup,
-                                 String openGraphTitle, String openGraphDescription, String openGraphImage,
-                                 String twitterTitle, String twitterDescription, String twitterImage) {
-        this.titreSeo = validateTitreSeo(titreSeo);
-        this.descriptionSeo = validateDescriptionSeo(descriptionSeo);
-        this.motsCles = motsCles != null ? new ArrayList<>(motsCles) : new ArrayList<>();
+    private CategoryMetadata(String seoTitle, String seoDescription, List<String> keywords,
+                             String metaRobots, String canonicalUrl, String schemaMarkup,
+                             String openGraphTitle, String openGraphDescription, String openGraphImage,
+                             String twitterTitle, String twitterDescription, String twitterImage) {
+        this.seoTitle = validateSeoTitle(seoTitle);
+        this.seoDescription = validateSeoDescription(seoDescription);
+        this.keywords = keywords != null ? new ArrayList<>(keywords) : new ArrayList<>();
         this.metaRobots = validateMetaRobots(metaRobots);
         this.canonicalUrl = canonicalUrl;
         this.schemaMarkup = schemaMarkup;
@@ -44,23 +68,23 @@ public class MetadonneesCategorie {
         this.twitterImage = twitterImage;
     }
 
-    public static MetadonneesCategorie basic(String titreSeo, String descriptionSeo) {
-        return new MetadonneesCategorie(titreSeo, descriptionSeo, null, "index,follow",
+    public static CategoryMetadata basic(String seoTitle, String seoDescription) {
+        return new CategoryMetadata(seoTitle, seoDescription, null, "index,follow",
                 null, null, null, null, null, null, null, null);
     }
 
-    public static MetadonneesCategorie complete(String titreSeo, String descriptionSeo,
-                                                List<String> motsCles, String metaRobots) {
-        return new MetadonneesCategorie(titreSeo, descriptionSeo, motsCles, metaRobots,
+    public static CategoryMetadata complete(String seoTitle, String seoDescription,
+                                            List<String> keywords, String metaRobots) {
+        return new CategoryMetadata(seoTitle, seoDescription, keywords, metaRobots,
                 null, null, null, null, null, null, null, null);
     }
 
-    public static MetadonneesCategorie withSocialMedia(String titreSeo, String descriptionSeo,
-                                                       List<String> motsCles, String openGraphTitle,
-                                                       String openGraphDescription, String openGraphImage,
-                                                       String twitterTitle, String twitterDescription,
-                                                       String twitterImage) {
-        return new MetadonneesCategorie(titreSeo, descriptionSeo, motsCles, "index,follow",
+    public static CategoryMetadata withSocialMedia(String seoTitle, String seoDescription,
+                                                   List<String> keywords, String openGraphTitle,
+                                                   String openGraphDescription, String openGraphImage,
+                                                   String twitterTitle, String twitterDescription,
+                                                   String twitterImage) {
+        return new CategoryMetadata(seoTitle, seoDescription, keywords, "index,follow",
                 null, null, openGraphTitle, openGraphDescription, openGraphImage,
                 twitterTitle, twitterDescription, twitterImage);
     }
@@ -69,11 +93,11 @@ public class MetadonneesCategorie {
         return new Builder();
     }
 
-    public MetadonneesCategorie addMotCle(String motCle) {
-        if (motCle != null && !motCle.trim().isEmpty() && !this.motsCles.contains(motCle.trim())) {
-            List<String> nouveauxMotsCles = new ArrayList<>(this.motsCles);
-            nouveauxMotsCles.add(motCle.trim());
-            return new MetadonneesCategorie(this.titreSeo, this.descriptionSeo, nouveauxMotsCles,
+    public CategoryMetadata addKeyword(String keyword) {
+        if (keyword != null && !keyword.trim().isEmpty() && !this.keywords.contains(keyword.trim())) {
+            List<String> newKeywords = new ArrayList<>(this.keywords);
+            newKeywords.add(keyword.trim());
+            return new CategoryMetadata(this.seoTitle, this.seoDescription, newKeywords,
                     this.metaRobots, this.canonicalUrl, this.schemaMarkup,
                     this.openGraphTitle, this.openGraphDescription, this.openGraphImage,
                     this.twitterTitle, this.twitterDescription, this.twitterImage);
@@ -81,11 +105,11 @@ public class MetadonneesCategorie {
         return this;
     }
 
-    public MetadonneesCategorie removeMotCle(String motCle) {
-        if (motCle != null && this.motsCles.contains(motCle.trim())) {
-            List<String> nouveauxMotsCles = new ArrayList<>(this.motsCles);
-            nouveauxMotsCles.remove(motCle.trim());
-            return new MetadonneesCategorie(this.titreSeo, this.descriptionSeo, nouveauxMotsCles,
+    public CategoryMetadata removeKeyword(String keyword) {
+        if (keyword != null && this.keywords.contains(keyword.trim())) {
+            List<String> newKeywords = new ArrayList<>(this.keywords);
+            newKeywords.remove(keyword.trim());
+            return new CategoryMetadata(this.seoTitle, this.seoDescription, newKeywords,
                     this.metaRobots, this.canonicalUrl, this.schemaMarkup,
                     this.openGraphTitle, this.openGraphDescription, this.openGraphImage,
                     this.twitterTitle, this.twitterDescription, this.twitterImage);
@@ -93,26 +117,26 @@ public class MetadonneesCategorie {
         return this;
     }
 
-    public MetadonneesCategorie updateCanonicalUrl(String canonicalUrl) {
-        return new MetadonneesCategorie(this.titreSeo, this.descriptionSeo, this.motsCles,
+    public CategoryMetadata updateCanonicalUrl(String canonicalUrl) {
+        return new CategoryMetadata(this.seoTitle, this.seoDescription, this.keywords,
                 this.metaRobots, canonicalUrl, this.schemaMarkup,
                 this.openGraphTitle, this.openGraphDescription, this.openGraphImage,
                 this.twitterTitle, this.twitterDescription, this.twitterImage);
     }
 
-    public MetadonneesCategorie updateSchemaMarkup(String schemaMarkup) {
-        return new MetadonneesCategorie(this.titreSeo, this.descriptionSeo, this.motsCles,
+    public CategoryMetadata updateSchemaMarkup(String schemaMarkup) {
+        return new CategoryMetadata(this.seoTitle, this.seoDescription, this.keywords,
                 this.metaRobots, this.canonicalUrl, schemaMarkup,
                 this.openGraphTitle, this.openGraphDescription, this.openGraphImage,
                 this.twitterTitle, this.twitterDescription, this.twitterImage);
     }
 
-    public String getMotsClesAsString() {
-        return String.join(", ", this.motsCles);
+    public String getKeywordsAsString() {
+        return String.join(", ", this.keywords);
     }
 
-    public boolean hasMotsCles() {
-        return !this.motsCles.isEmpty();
+    public boolean hasKeywords() {
+        return !this.keywords.isEmpty();
     }
 
     public boolean isIndexable() {
@@ -139,17 +163,17 @@ public class MetadonneesCategorie {
         return this.schemaMarkup != null && !this.schemaMarkup.trim().isEmpty();
     }
 
-    private String validateTitreSeo(String titre) {
-        if (titre == null || titre.trim().isEmpty()) {
+    private String validateSeoTitle(String title) {
+        if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("SEO title cannot be null or empty");
         }
-        if (titre.length() > 60) {
+        if (title.length() > 60) {
             throw new IllegalArgumentException("SEO title should not exceed 60 characters for optimal display");
         }
-        return titre.trim();
+        return title.trim();
     }
 
-    private String validateDescriptionSeo(String description) {
+    private String validateSeoDescription(String description) {
         if (description == null || description.trim().isEmpty()) {
             throw new IllegalArgumentException("SEO description cannot be null or empty");
         }
@@ -200,9 +224,9 @@ public class MetadonneesCategorie {
     }
 
     public static class Builder {
-        private String titreSeo;
-        private String descriptionSeo;
-        private List<String> motsCles = new ArrayList<>();
+        private String seoTitle;
+        private String seoDescription;
+        private List<String> keywords = new ArrayList<>();
         private String metaRobots = "index,follow";
         private String canonicalUrl;
         private String schemaMarkup;
@@ -213,24 +237,24 @@ public class MetadonneesCategorie {
         private String twitterDescription;
         private String twitterImage;
 
-        public Builder titreSeo(String titreSeo) {
-            this.titreSeo = titreSeo;
+        public Builder seoTitle(String seoTitle) {
+            this.seoTitle = seoTitle;
             return this;
         }
 
-        public Builder descriptionSeo(String descriptionSeo) {
-            this.descriptionSeo = descriptionSeo;
+        public Builder seoDescription(String seoDescription) {
+            this.seoDescription = seoDescription;
             return this;
         }
 
-        public Builder motsCles(List<String> motsCles) {
-            this.motsCles = motsCles != null ? new ArrayList<>(motsCles) : new ArrayList<>();
+        public Builder keywords(List<String> keywords) {
+            this.keywords = keywords != null ? new ArrayList<>(keywords) : new ArrayList<>();
             return this;
         }
 
-        public Builder addMotCle(String motCle) {
-            if (motCle != null && !motCle.trim().isEmpty()) {
-                this.motsCles.add(motCle.trim());
+        public Builder addKeyword(String keyword) {
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                this.keywords.add(keyword.trim());
             }
             return this;
         }
@@ -264,8 +288,8 @@ public class MetadonneesCategorie {
             return this;
         }
 
-        public MetadonneesCategorie build() {
-            return new MetadonneesCategorie(titreSeo, descriptionSeo, motsCles, metaRobots,
+        public CategoryMetadata build() {
+            return new CategoryMetadata(seoTitle, seoDescription, keywords, metaRobots,
                     canonicalUrl, schemaMarkup, openGraphTitle,
                     openGraphDescription, openGraphImage, twitterTitle,
                     twitterDescription, twitterImage);

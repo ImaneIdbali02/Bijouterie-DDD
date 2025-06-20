@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: product-service
+  profiles:
+    active: local
+  cloud:
+    config:
+      uri: http://localhost:8888
+      fail-fast: true
+      retry:
+        initial-interval: 1000
+        max-interval: 2000
+        max-attempts: 3
+      profile: local

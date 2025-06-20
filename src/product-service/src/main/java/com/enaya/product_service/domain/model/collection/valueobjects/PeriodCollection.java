@@ -1,108 +1,105 @@
 package com.enaya.product_service.domain.model.collection.valueobjects;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Column;
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-@Getter
-@EqualsAndHashCode
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PeriodeCollection {
+@Value
+@Embeddable
+@NoArgsConstructor(access = AccessLevel.PROTECTED, force = true)
+public class PeriodCollection {
 
-    private LocalDateTime dateDebut;
-    private LocalDateTime dateFin;
+    @Column(name = "period_start_date")
+    LocalDateTime startDate;
+    
+    @Column(name = "period_end_date")
+    LocalDateTime endDate;
 
-    private PeriodeCollection(LocalDateTime dateDebut, LocalDateTime dateFin) {
-        this.dateDebut = validateDateDebut(dateDebut);
-        this.dateFin = validateDateFin(dateFin, dateDebut);
+    private PeriodCollection(LocalDateTime startDate, LocalDateTime endDate) {
+        this.startDate = validateStartDate(startDate);
+        this.endDate = validateEndDate(endDate, startDate);
     }
 
-    public static PeriodeCollection of(LocalDateTime dateDebut, LocalDateTime dateFin) {
-        return new PeriodeCollection(dateDebut, dateFin);
+    public static PeriodCollection of(LocalDateTime startDate, LocalDateTime endDate) {
+        return new PeriodCollection(startDate, endDate);
     }
 
-    public static PeriodeCollection ofDays(LocalDateTime dateDebut, int nombreJours) {
-        if (nombreJours <= 0) {
+    public static PeriodCollection ofDays(LocalDateTime startDate, int numberOfDays) {
+        if (numberOfDays <= 0) {
             throw new IllegalArgumentException("Number of days must be positive");
         }
-        LocalDateTime dateFin = dateDebut.plusDays(nombreJours);
-        return new PeriodeCollection(dateDebut, dateFin);
+        LocalDateTime endDate = startDate.plusDays(numberOfDays);
+        return new PeriodCollection(startDate, endDate);
     }
 
-    public static PeriodeCollection ofWeeks(LocalDateTime dateDebut, int nombreSemaines) {
-        if (nombreSemaines <= 0) {
+    public static PeriodCollection ofWeeks(LocalDateTime startDate, int numberOfWeeks) {
+        if (numberOfWeeks <= 0) {
             throw new IllegalArgumentException("Number of weeks must be positive");
         }
-        LocalDateTime dateFin = dateDebut.plusWeeks(nombreSemaines);
-        return new PeriodeCollection(dateDebut, dateFin);
+        LocalDateTime endDate = startDate.plusWeeks(numberOfWeeks);
+        return new PeriodCollection(startDate, endDate);
     }
 
-    public static PeriodeCollection ofMonths(LocalDateTime dateDebut, int nombreMois) {
-        if (nombreMois <= 0) {
+    public static PeriodCollection ofMonths(LocalDateTime startDate, int numberOfMonths) {
+        if (numberOfMonths <= 0) {
             throw new IllegalArgumentException("Number of months must be positive");
         }
-        LocalDateTime dateFin = dateDebut.plusMonths(nombreMois);
-        return new PeriodeCollection(dateDebut, dateFin);
+        LocalDateTime endDate = startDate.plusMonths(numberOfMonths);
+        return new PeriodCollection(startDate, endDate);
     }
 
-    public static PeriodeCollection summer2024() {
+    public static PeriodCollection summer2025() {
         return of(
-                LocalDateTime.of(2024, 6, 21, 0, 0),
-                LocalDateTime.of(2024, 9, 22, 23, 59)
+                LocalDateTime.of(2025, 6, 21, 0, 0),
+                LocalDateTime.of(2025, 9, 22, 23, 59)
         );
     }
 
-    public static PeriodeCollection winter2024() {
+    public static PeriodCollection winter2025() {
         return of(
-                LocalDateTime.of(2024, 12, 21, 0, 0),
-                LocalDateTime.of(2025, 3, 20, 23, 59)
-        );
-    }
-
-    public static PeriodeCollection christmas2024() {
-        return of(
-                LocalDateTime.of(2024, 12, 1, 0, 0),
-                LocalDateTime.of(2024, 12, 31, 23, 59)
+                LocalDateTime.of(2025, 12, 21, 0, 0),
+                LocalDateTime.of(2026, 3, 20, 23, 59)
         );
     }
 
     public boolean isCurrentlyActive() {
         LocalDateTime now = LocalDateTime.now();
-        return !now.isBefore(dateDebut) && !now.isAfter(dateFin);
+        return !now.isBefore(startDate) && !now.isAfter(endDate);
     }
 
     public boolean isUpcoming() {
-        return LocalDateTime.now().isBefore(dateDebut);
+        return LocalDateTime.now().isBefore(startDate);
     }
 
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(dateFin);
+        return LocalDateTime.now().isAfter(endDate);
     }
 
     public boolean contains(LocalDateTime date) {
         if (date == null) {
             return false;
         }
-        return !date.isBefore(dateDebut) && !date.isAfter(dateFin);
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
     }
 
-    public boolean overlaps(PeriodeCollection other) {
+    public boolean overlaps(PeriodCollection other) {
         if (other == null) {
             return false;
         }
-        return !this.dateFin.isBefore(other.dateDebut) && !this.dateDebut.isAfter(other.dateFin);
+        return !this.endDate.isBefore(other.startDate) && !this.startDate.isAfter(other.endDate);
     }
 
     public long getDurationInDays() {
-        return ChronoUnit.DAYS.between(dateDebut, dateFin) + 1;
+        return ChronoUnit.DAYS.between(startDate, endDate) + 1;
     }
 
     public long getDurationInHours() {
-        return ChronoUnit.HOURS.between(dateDebut, dateFin);
+        return ChronoUnit.HOURS.between(startDate, endDate);
     }
 
     public long getRemainingDays() {
@@ -111,16 +108,16 @@ public class PeriodeCollection {
         }
         LocalDateTime now = LocalDateTime.now();
         if (isUpcoming()) {
-            return ChronoUnit.DAYS.between(now, dateDebut);
+            return ChronoUnit.DAYS.between(now, startDate);
         }
-        return ChronoUnit.DAYS.between(now, dateFin);
+        return ChronoUnit.DAYS.between(now, endDate);
     }
 
     public long getDaysUntilStart() {
         if (!isUpcoming()) {
             return 0;
         }
-        return ChronoUnit.DAYS.between(LocalDateTime.now(), dateDebut);
+        return ChronoUnit.DAYS.between(LocalDateTime.now(), startDate);
     }
 
     public double getProgressPercentage() {
@@ -132,43 +129,43 @@ public class PeriodeCollection {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        long totalDuration = ChronoUnit.MINUTES.between(dateDebut, dateFin);
-        long elapsed = ChronoUnit.MINUTES.between(dateDebut, now);
+        long totalDuration = ChronoUnit.MINUTES.between(startDate, endDate);
+        long elapsed = ChronoUnit.MINUTES.between(startDate, now);
 
         return (double) elapsed / totalDuration * 100.0;
     }
 
-    public PeriodeCollection extend(int days) {
-        return new PeriodeCollection(this.dateDebut, this.dateFin.plusDays(days));
+    public PeriodCollection extend(int days) {
+        return new PeriodCollection(this.startDate, this.endDate.plusDays(days));
     }
 
-    public PeriodeCollection shorten(int days) {
-        LocalDateTime newDateFin = this.dateFin.minusDays(days);
-        if (newDateFin.isBefore(this.dateDebut)) {
+    public PeriodCollection shorten(int days) {
+        LocalDateTime newEndDate = this.endDate.minusDays(days);
+        if (newEndDate.isBefore(this.startDate)) {
             throw new IllegalArgumentException("Cannot shorten period: end date would be before start date");
         }
-        return new PeriodeCollection(this.dateDebut, newDateFin);
+        return new PeriodCollection(this.startDate, newEndDate);
     }
 
     @Override
     public String toString() {
-        return String.format("From %s to %s", dateDebut, dateFin);
+        return String.format("From %s to %s", startDate, endDate);
     }
 
-    private LocalDateTime validateDateDebut(LocalDateTime dateDebut) {
-        if (dateDebut == null) {
+    private LocalDateTime validateStartDate(LocalDateTime startDate) {
+        if (startDate == null) {
             throw new IllegalArgumentException("Start date cannot be null");
         }
-        return dateDebut;
+        return startDate;
     }
 
-    private LocalDateTime validateDateFin(LocalDateTime dateFin, LocalDateTime dateDebut) {
-        if (dateFin == null) {
+    private LocalDateTime validateEndDate(LocalDateTime endDate, LocalDateTime startDate) {
+        if (endDate == null) {
             throw new IllegalArgumentException("End date cannot be null");
         }
-        if (dateFin.isBefore(dateDebut)) {
+        if (endDate.isBefore(startDate)) {
             throw new IllegalArgumentException("End date cannot be before start date");
         }
-        return dateFin;
+        return endDate;
     }
 }
