@@ -8,15 +8,14 @@ spring:
     config:
       server:
         git:
-          uri: ${GIT_REPO_URI:https://github.com/yourcompany/config-repo.git}
-          username: ${GIT_USERNAME:}
-          password: ${GIT_PASSWORD:}
-          default-label: ${GIT_DEFAULT_BRANCH:main}
-          search-paths:
-            - /*
+          uri: https://github.com/ImaneIdbali02/config-repo.git
+          username: ${GIT_USERNAME:ImaneIdbali02}
+          password: ${GIT_PASSWORD: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}
+          default-label: master
+          search-paths: /*
           clone-on-start: true
           force-pull: true
-          timeout: 10
+          timeout: 30
 
 management:
   endpoints:
@@ -30,3 +29,4 @@ management:
 logging:
   level:
     org.springframework.cloud.config: DEBUG
+    org.eclipse.jgit: DEBUG
