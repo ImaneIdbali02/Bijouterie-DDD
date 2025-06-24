@@ -1,0 +1,11 @@
+{
+  "name": "Bague en Or 18 Carats",
+  "description": "Magnifique bague en or 18 carats avec un design élégant et moderne",
+  "sku": "BAGUE-OR-001",
+  "price": {
+    "amount": 2500.00,
+    "currency": "MAD"
+  },
+  "categoryId": "dee1b441-0e9b-4706-b93d-ed935e9545e4",
+  "active": true
+} 

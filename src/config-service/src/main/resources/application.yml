@@ -1,0 +1,32 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-service
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/ImaneIdbali02/config-repo.git
+          username: ${GIT_USERNAME:ImaneIdbali02}
+          password: ${GIT_PASSWORD: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}
+          default-label: master
+          search-paths: /*
+          clone-on-start: true
+          force-pull: true
+          timeout: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG
+    org.eclipse.jgit: DEBUG
