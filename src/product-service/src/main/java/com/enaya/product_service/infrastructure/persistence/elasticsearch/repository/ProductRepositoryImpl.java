@@ -69,6 +69,10 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
     protected void syncWithElasticsearch(Product product) {
         try {
+            // Force le chargement de la collection pour éviter l'erreur lazy
+            if (product.getCollections() != null) {
+                product.getCollections().size();
+            }
             elasticsearchSyncService.indexProduct(product);
         } catch (Exception e) {
             log.error("Failed to sync product {} with Elasticsearch", product.getId(), e);

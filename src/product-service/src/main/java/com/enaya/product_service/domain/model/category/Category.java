@@ -79,6 +79,9 @@ public class Category {
     @Column(name = "visible_in_menu")
     private boolean visibleInMenu = true;
 
+    @Embedded
+    private CategoryMetadata metadata;
+
     @Builder
     private Category(String name, String description, String slug,
                      UUID parentId, List<UUID> childCategoryIds,

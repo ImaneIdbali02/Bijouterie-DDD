@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    config:
+      uri: http://config-service:8888
+      fail-fast: true
+
+app:
+  jwt:
+    secret: sUOHfk58sleuzoFJB7u6wPcC7kRKfyHT/S9vv1BMJ+SCa6GRr/cVFftHMhShsWHxno/dDaQ1BGKiaItYjOn3mw==
+

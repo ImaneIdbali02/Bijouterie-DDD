@@ -12,6 +12,7 @@ import com.enaya.product_service.infrastructure.persistence.elasticsearch.dto.Pr
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -38,6 +39,11 @@ public class ElasticsearchSyncServiceImpl implements ElasticsearchSyncService {
     public void indexProduct(Product product) {
         try {
             log.debug("Indexing product: {}", product.getId());
+            
+            // Force le chargement de la collection pour éviter l'erreur lazy
+            if (product.getCollections() != null) {
+                product.getCollections().size();
+            }
             
             ProductIndexDto productIndexDto = ProductIndexDto.fromProduct(product);
             
@@ -96,6 +102,10 @@ public class ElasticsearchSyncServiceImpl implements ElasticsearchSyncService {
             BulkRequest.Builder br = new BulkRequest.Builder();
             products.forEach(product -> {
                 try {
+                    // Force le chargement de la collection pour éviter l'erreur lazy
+                    if (product.getCollections() != null) {
+                        product.getCollections().size();
+                    }
                     ProductIndexDto productIndexDto = ProductIndexDto.fromProduct(product);
                     
                     br.operations(op -> op
@@ -160,6 +170,10 @@ public class ElasticsearchSyncServiceImpl implements ElasticsearchSyncService {
             switch (type) {
                 case INDEX:
                     Product product = (Product) data;
+                    // Force le chargement de la collection pour éviter l'erreur lazy
+                    if (product.getCollections() != null) {
+                        product.getCollections().size();
+                    }
                     ProductIndexDto productIndexDto = ProductIndexDto.fromProduct(product);
                     client.index(i -> i
                         .index(PRODUCTS_INDEX)

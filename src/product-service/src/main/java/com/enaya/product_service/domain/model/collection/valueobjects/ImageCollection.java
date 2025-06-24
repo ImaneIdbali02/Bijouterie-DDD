@@ -31,7 +31,7 @@ public class ImageCollection {
     @Column(name = "height")
     int height;
     
-    @Column(name = "description")
+    @Column(name = "description", insertable = false, updatable = false)
     String description;
 
     private ImageCollection(String url, String altText, int displayOrder, String type,

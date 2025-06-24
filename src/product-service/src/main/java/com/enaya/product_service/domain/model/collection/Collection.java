@@ -79,6 +79,9 @@ public class Collection {
     @ManyToMany(mappedBy = "collections")
     private List<Product> products = new ArrayList<>();
 
+    @Embedded
+    ImageCollection image;
+
     @Builder
     private Collection(UUID id, String name, String description, String slug,
                        PeriodCollection period, List<ImageCollection> images,

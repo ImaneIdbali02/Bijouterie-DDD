@@ -1,0 +1,2 @@
+com\enaya\apigateway\ApiGatewayApplication.class
+com\enaya\apigateway\JwtAuthenticationFilter.class
