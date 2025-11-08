@@ -64,8 +64,8 @@ services:
     container_name: postgres-auth
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "0000"
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
     ports:
       - "5433:5432"
 
@@ -74,8 +74,8 @@ services:
     container_name: postgres-product
     environment:
       POSTGRES_DB: product_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "0000"
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
     ports:
       - "5434:5432"
 
@@ -84,8 +84,8 @@ services:
     container_name: postgres-stock
     environment:
       POSTGRES_DB: stock_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "0000"
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
     ports:
       - "5435:5432"
 
@@ -116,7 +116,7 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
-      - ELASTIC_PASSWORD=pbIM1uTwqFm=Igi7btdc
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - xpack.security.enabled=true
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
