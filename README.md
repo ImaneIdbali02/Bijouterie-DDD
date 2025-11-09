@@ -526,11 +526,11 @@ Order Service                    Stock Service
 
 Le projet utilise **Spring Cloud Config Server** pour centraliser la configuration de tous les microservices. Cette approche permet de :
 
-- ✅ **Centraliser** toutes les configurations dans un seul dépôt Git
-- ✅ **Séparer** les configurations par environnement (dev, prod, docker)
-- ✅ **Sécuriser** les secrets via variables d'environnement
-- ✅ **Versionner** les changements de configuration
-- ✅ **Dynamiser** la configuration sans redéployer les services
+-  **Centraliser** toutes les configurations dans un seul dépôt Git
+-  **Séparer** les configurations par environnement (dev, prod, docker)
+-  **Sécuriser** les secrets via variables d'environnement
+-  **Versionner** les changements de configuration
+-  **Dynamiser** la configuration sans redéployer les services
 
 ### Architecture du Config Repository
 
